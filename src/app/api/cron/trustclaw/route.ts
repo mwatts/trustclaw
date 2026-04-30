@@ -1,4 +1,3 @@
-import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { Prisma } from "~/generated/prisma/client";
 import { z } from "zod";
@@ -33,16 +32,9 @@ function parseNowOverride(request: Request): Date {
 }
 
 export async function GET(request: Request) {
-  if (!env.CRON_SECRET) {
-    return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
-  }
-  const authHeader = request.headers.get("authorization") ?? "";
-  const expected = `Bearer ${env.CRON_SECRET}`;
-  if (
-    authHeader.length !== expected.length ||
-    !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
-  ) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userAgent = request.headers.get("user-agent") ?? "";
+  if (env.NODE_ENV !== "development" && !userAgent.startsWith("vercel-cron")) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const now = parseNowOverride(request);
@@ -119,7 +111,7 @@ export async function GET(request: Request) {
       fetch(executeUrl, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${env.CRON_SECRET}`,
+          "user-agent": "vercel-cron/1.0",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

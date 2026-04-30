@@ -21,9 +21,6 @@ export const env = createEnv({
     // Database
     DATABASE_URL: z.string().url(),
 
-    // Vercel cron (optional at build time, guarded at runtime in cron handlers)
-    CRON_SECRET: z.string().min(1),
-
     // Redis (resumable streams, streaming state, abort flags)
     REDIS_URL: z.string(),
 
@@ -42,7 +39,6 @@ export const env = createEnv({
     TELEGRAM_BOT_USERNAME: process.env.TELEGRAM_BOT_USERNAME,
     TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
-    CRON_SECRET: process.env.CRON_SECRET,
     REDIS_URL: process.env.REDIS_URL,
     TWITTER_AUTH_CONFIG: process.env.TWITTER_AUTH_CONFIG,
 

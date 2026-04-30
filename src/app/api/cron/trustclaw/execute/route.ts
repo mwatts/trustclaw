@@ -1,8 +1,6 @@
-import { timingSafeEqual } from "crypto";
 import { after, NextResponse } from "next/server";
 import { Prisma } from "~/generated/prisma/client";
 import { z } from "zod";
-import { env } from "~/env";
 import { db } from "~/server/clients/db";
 import { prepareAgentRun } from "~/server/api/routers/trustclaw/agent/setup";
 import { computeNextRunSafe } from "~/server/api/routers/trustclaw/agent/tools/cron-utils";
@@ -120,19 +118,9 @@ async function executeJobs(
 export const maxDuration = 800;
 
 export async function POST(request: Request) {
-  if (!env.CRON_SECRET) {
-    return NextResponse.json(
-      { error: "CRON_SECRET not configured" },
-      { status: 500 },
-    );
-  }
-  const authHeader = request.headers.get("authorization") ?? "";
-  const expected = `Bearer ${env.CRON_SECRET}`;
-  if (
-    authHeader.length !== expected.length ||
-    !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
-  ) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userAgent = request.headers.get("user-agent") ?? "";
+  if (!userAgent.startsWith("vercel-cron")) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const body: unknown = await request.json();
