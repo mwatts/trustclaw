@@ -18,35 +18,8 @@ const code = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://trustclaw.app"),
-  title: {
-    default: "TrustClaw by Composio",
-    template: "%s | TrustClaw",
-  },
-  description:
-    "Your 24/7 AI assistant with 1000+ integrations via OAuth and sandboxed execution. Built on the ideas behind OpenClaw, rebuilt for security.",
+  title: "trustclaw",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
-  openGraph: {
-    type: "website",
-    siteName: "TrustClaw",
-    title: "TrustClaw by Composio",
-    description:
-      "Your 24/7 AI assistant with 1000+ integrations via OAuth and sandboxed execution.",
-    url: "https://trustclaw.app",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "TrustClaw by Composio",
-    description:
-      "Your 24/7 AI assistant with 1000+ integrations via OAuth and sandboxed execution.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  alternates: {
-    canonical: "https://trustclaw.app",
-  },
 };
 
 export default async function RootLayout({
