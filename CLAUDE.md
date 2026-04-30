@@ -8,7 +8,7 @@ TrustClaw — a self-hostable personal AI agent with vector memory, Composio too
 
 - **Framework:** [Next.js 15](https://nextjs.org/docs/15/) (App Router)
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/docs) + [shadcn/ui](https://ui.shadcn.com/docs/)
-- **Auth:** [Better Auth](https://www.better-auth.com/) with Google OAuth login.
+- **Auth:** [Better Auth](https://www.better-auth.com/) with username/password login (Google OAuth has been removed).
 - **Server:** [tRPC](https://trpc.io/docs/) for all backend logic
 - **Date/Time:** [moment.js](https://momentjs.com/docs/) for all date formatting and parsing
 
@@ -16,7 +16,7 @@ When you need to look up documentation for any of these libraries, use the **Con
 
 ## Architecture
 
-This dashboard uses a **single tRPC backend** running within Next.js. Auth is handled by Better Auth with Google OAuth. Composio functionality is accessed server-side using a global API key.
+This dashboard uses a **single tRPC backend** running within Next.js. Auth is handled by Better Auth with username/password. Composio functionality is accessed server-side using a global API key. All LLM and embedding calls route through **Vercel AI Gateway** via plain string model IDs (e.g., `'anthropic/claude-sonnet-4-6'`). Auth uses `VERCEL_OIDC_TOKEN` on Vercel deployments, or `AI_GATEWAY_API_KEY` for local dev.
 
 ### tRPC (Backend)
 
@@ -30,7 +30,7 @@ This dashboard uses a **single tRPC backend** running within Next.js. Auth is ha
 - Server config at `src/server/auth.ts`
 - Route handler at `src/app/api/auth/[...all]/route.ts`
 - Client module at `src/clients/auth/react.tsx` (exports `authClient` from `better-auth/react`)
-- Google OAuth only via Better Auth (no magic link, no other social providers)
+- Username/password login via Better Auth (no OAuth providers)
 - Session model: `{ user, session }` (no org/project)
 
 ```
@@ -45,7 +45,7 @@ This dashboard uses a **single tRPC backend** running within Next.js. Auth is ha
 ┌──────────────────────┐    ┌─────────────────────────────┐
 │   tRPC Server        │    │     Better Auth Server      │
 │   (Next.js API)      │    │   src/server/auth.ts        │
-│                      │    │   + Google OAuth            │
+│                      │    │   + username/password       │
 └──────────────────────┘    └─────────────────────────────┘
 ```
 
@@ -357,13 +357,14 @@ const user = data?.user;
 const session = data?.session;
 ```
 
-**Google sign-in:**
+**Username/password sign-in:**
 
 ```typescript
 import { authClient } from "~/clients/auth/react";
 
-await authClient.signIn.social({
-  provider: "google",
+await authClient.signIn.username({
+  username: "user",
+  password: "password",
   callbackURL: "/dashboard",
 });
 ```
@@ -527,7 +528,7 @@ Some features use external SDKs directly. These clients live in `src/server/clie
 src/server/clients/
 ├── composio.ts   # Composio SDK (@composio/core) — uses global COMPOSIO_API_KEY from env
 ├── telegram.ts   # Telegram Bot API helper
-├── openai.ts     # OpenAI client — used for memory embeddings (text-embedding-3-large)
+├── ai-gateway.ts # Vercel AI Gateway client — LLM and embedding calls via plain model IDs
 ├── redis.ts      # Redis client (resumable streams, streaming state, abort flags)
 └── db.ts         # Prisma client
 ```
@@ -603,7 +604,7 @@ We rarely need to make custom components since we are maximally using shadcn pri
 
 - ALWAYS use the `env` helper from `~/env` instead of raw `process.env` — it provides type safety and validation via Zod
 - Only use `process.env` directly in root config files that run before the app bootstraps (e.g., `next.config.js`) where the `env` helper is unavailable
-- Key server-only env vars: `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `COMPOSIO_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL`
+- Key server-only env vars: `BETTER_AUTH_SECRET`, `COMPOSIO_API_KEY`, `DATABASE_URL`, and optionally `AI_GATEWAY_API_KEY` (for local dev — on Vercel, `VERCEL_OIDC_TOKEN` is used automatically)
 - There are no `NEXT_PUBLIC_BACKEND_URL` or similar public backend env vars — all API calls go through tRPC
 
   ```typescript
