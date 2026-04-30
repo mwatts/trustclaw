@@ -13,7 +13,6 @@ import type { TerminalLogEntryData } from "./types";
 export function useToolFocusHighlight() {
   useEffect(() => {
     const handler = (e: Event) => {
-      // eslint-disable-next-line analytics/no-type-assertion -- custom DOM event
       const detail = (e as CustomEvent<{ toolCallId: string }>).detail;
       if (detail?.toolCallId) {
         requestAnimationFrame(() => {

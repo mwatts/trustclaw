@@ -25,7 +25,6 @@ export function SettingsPageClient() {
       <ErrorDisplay
         message={error.message}
         retryText="Try again"
-        // eslint-disable-next-line analytics/no-window-location -- intentional hard reload to recover from network errors
         onRetry={() => window.location.reload()}
       />
     );

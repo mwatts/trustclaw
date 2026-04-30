@@ -28,11 +28,9 @@ function sanitizeString(str: string): string {
 
 function deepSanitize<T>(value: T): T {
   if (typeof value === "string") {
-    // eslint-disable-next-line analytics/no-type-assertion
     return sanitizeString(value) as T;
   }
   if (Array.isArray(value)) {
-    // eslint-disable-next-line analytics/no-type-assertion
     return value.map(deepSanitize) as T;
   }
   if (value !== null && typeof value === "object") {
@@ -95,7 +93,6 @@ export function toPlainRecordSafe(value: unknown): Record<string, unknown> {
 }
 
 export function toPrismaJson(value: unknown): Prisma.InputJsonValue {
-  // eslint-disable-next-line analytics/no-type-assertion -- JsonValue ≡ Prisma.InputJsonValue but TS can't prove it
   return toJsonValue(
     JSON.parse(JSON.stringify(value ?? {})),
   ) satisfies JsonValue as Prisma.InputJsonValue;

@@ -18,7 +18,6 @@ interface ToolInvocationProps {
 }
 
 function getToolDescription(toolCall: AnyToolUIPart): string | undefined {
-  // eslint-disable-next-line analytics/no-type-assertion
   const args = (toolCall.input ?? {}) as Record<string, unknown>;
   const name = getToolName(toolCall);
 

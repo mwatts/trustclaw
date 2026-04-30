@@ -37,7 +37,6 @@ export function toolCallToLogEntry(
         ? "error"
         : "executing",
     timestamp: timestampCache.get(toolCall.toolCallId)!,
-    // eslint-disable-next-line analytics/no-type-assertion
     args: (toolCall.input ?? {}) as Record<string, unknown>,
     result: toolCall.state === "output-available" ? toolCall.output : undefined,
   };

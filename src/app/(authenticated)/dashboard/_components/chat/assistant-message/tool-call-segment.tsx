@@ -20,7 +20,6 @@ function getInlineConnectionActions(
   if (!toolName.endsWith("MANAGE_CONNECTIONS")) return [];
   if (toolCall.state !== "output-available" || !toolCall.output) return [];
 
-  // eslint-disable-next-line analytics/no-type-assertion
   const args = (toolCall.input ?? {}) as Record<string, unknown>;
   const parsed = parseManageConnectionsResult(toolCall.output, args);
   if (!parsed) return [];

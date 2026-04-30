@@ -31,7 +31,6 @@ export function TrustClawChat() {
   const initialMessages: UIMessage[] = allHistoryMessages.map((msg) => ({
     id: msg.id,
     role: msg.role,
-    // eslint-disable-next-line analytics/no-type-assertion
     parts: msg.content as UIMessage["parts"],
   }));
 
