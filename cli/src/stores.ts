@@ -1,6 +1,5 @@
-import chalk from "chalk";
+import { spinner, password, log, isCancel, cancel } from "@clack/prompts";
 import open from "open";
-import prompts from "prompts";
 
 interface ProvisionArgs {
   token: string;
@@ -13,8 +12,17 @@ interface ConnectionStrings {
   redisUrl: string | null;
 }
 
+function ensure<T>(value: T | symbol): T {
+  if (isCancel(value)) {
+    cancel("Cancelled.");
+    process.exit(0);
+  }
+  return value as T;
+}
+
 async function provisionPostgres(args: ProvisionArgs): Promise<string> {
-  console.log(chalk.gray("  Provisioning Neon Postgres via Vercel Marketplace..."));
+  const s = spinner();
+  s.start("Provisioning Neon Postgres via Vercel Marketplace");
 
   const url = args.teamId
     ? `https://api.vercel.com/v1/storage/stores?teamId=${args.teamId}`
@@ -34,29 +42,27 @@ async function provisionPostgres(args: ProvisionArgs): Promise<string> {
   });
 
   if (!res.ok) {
-    console.log(
-      chalk.yellow(
-        "  Auto-provisioning unavailable; opening Vercel Storage in your browser...",
-      ),
-    );
+    s.stop("Auto-provisioning unavailable; opening Vercel Storage");
+    log.info("Click 'Create' on Postgres in your browser, then paste the connection string back here.");
     await open("https://vercel.com/dashboard/stores");
-    const { connectionString } = await prompts({
-      type: "password",
-      name: "connectionString",
-      message: "Paste the DATABASE_URL from the new Postgres store",
-      validate: (v: string) =>
-        v.startsWith("postgres") || "Should start with postgres://",
-    });
-    return connectionString as string;
+
+    const connectionString = ensure(
+      await password({
+        message: "Paste the DATABASE_URL from the new Postgres store",
+        validate: (v) => (v && v.startsWith("postgres") ? undefined : "Should start with postgres://"),
+      }),
+    );
+    return connectionString;
   }
 
   const data = (await res.json()) as { connectionString: string };
-  console.log(chalk.green("  ✓ Postgres provisioned"));
+  s.stop("Postgres provisioned");
   return data.connectionString;
 }
 
 async function provisionRedis(args: ProvisionArgs): Promise<string> {
-  console.log(chalk.gray("  Provisioning Upstash Redis via Vercel Marketplace..."));
+  const s = spinner();
+  s.start("Provisioning Upstash Redis via Vercel Marketplace");
 
   const url = args.teamId
     ? `https://api.vercel.com/v1/storage/stores?teamId=${args.teamId}`
@@ -76,24 +82,21 @@ async function provisionRedis(args: ProvisionArgs): Promise<string> {
   });
 
   if (!res.ok) {
-    console.log(
-      chalk.yellow(
-        "  Auto-provisioning unavailable; opening Vercel Storage in your browser...",
-      ),
-    );
+    s.stop("Auto-provisioning unavailable; opening Vercel Storage");
+    log.info("Click 'Create' on Redis in your browser, then paste the connection string back here.");
     await open("https://vercel.com/dashboard/stores");
-    const { connectionString } = await prompts({
-      type: "password",
-      name: "connectionString",
-      message: "Paste the REDIS_URL from the new Redis store",
-      validate: (v: string) =>
-        v.startsWith("redis") ? true : "Should start with redis://",
-    });
-    return connectionString as string;
+
+    const connectionString = ensure(
+      await password({
+        message: "Paste the REDIS_URL from the new Redis store",
+        validate: (v) => (v && v.startsWith("redis") ? undefined : "Should start with redis://"),
+      }),
+    );
+    return connectionString;
   }
 
   const data = (await res.json()) as { connectionString: string };
-  console.log(chalk.green("  ✓ Redis provisioned"));
+  s.stop("Redis provisioned");
   return data.connectionString;
 }
 

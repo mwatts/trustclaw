@@ -1,5 +1,4 @@
-import prompts from "prompts";
-import chalk from "chalk";
+import { text, password, confirm, isCancel, cancel } from "@clack/prompts";
 
 export interface UserInputs {
   composioApiKey: string;
@@ -7,39 +6,39 @@ export interface UserInputs {
   projectName: string;
 }
 
-export async function gatherInputs(githubUsername: string): Promise<UserInputs> {
-  console.log(chalk.bold("Configuration\n"));
+function ensure<T>(value: T | symbol): T {
+  if (isCancel(value)) {
+    cancel("Cancelled.");
+    process.exit(0);
+  }
+  return value as T;
+}
 
-  const result = await prompts(
-    [
-      {
-        type: "text",
-        name: "projectName",
-        message: "Vercel project name",
-        initial: "trustclaw",
-        validate: (v: string) => /^[a-z0-9-]+$/.test(v) || "Lowercase letters, numbers, and dashes only",
-      },
-      {
-        type: "password",
-        name: "composioApiKey",
-        message: "Composio API key (free at https://app.composio.dev — Settings → API keys)",
-        validate: (v: string) => v.length > 10 || "Looks too short — should start with 'comp_'",
-      },
-      {
-        type: "confirm",
-        name: "enableRedis",
-        message: "Add Upstash Redis for resumable streams? (recommended)",
-        initial: true,
-      },
-    ],
-    {
-      onCancel: () => {
-        console.log(chalk.yellow("\nCancelled."));
-        process.exit(1);
-      },
-    },
+export async function gatherInputs(githubUsername: string): Promise<UserInputs> {
+  void githubUsername;
+
+  const projectName = ensure(
+    await text({
+      message: "Vercel project name",
+      initialValue: "trustclaw",
+      validate: (v) =>
+        v && /^[a-z0-9-]+$/.test(v) ? undefined : "Lowercase letters, numbers, and dashes only",
+    }),
   );
 
-  void githubUsername;
-  return result as UserInputs;
+  const composioApiKey = ensure(
+    await password({
+      message: "Composio API key (free at https://app.composio.dev — Settings → API keys)",
+      validate: (v) => (v && v.length > 10 ? undefined : "Looks too short — should start with 'comp_'"),
+    }),
+  );
+
+  const enableRedis = ensure(
+    await confirm({
+      message: "Add Upstash Redis for resumable streams? (recommended)",
+      initialValue: true,
+    }),
+  );
+
+  return { projectName, composioApiKey, enableRedis };
 }

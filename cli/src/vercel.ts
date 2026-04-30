@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { spinner } from "@clack/prompts";
 
 const VERCEL_API = "https://api.vercel.com";
 
@@ -26,13 +26,20 @@ async function getRepoId(githubToken: string, slug: string): Promise<number> {
 
 export async function createVercelProject(args: CreateProjectArgs): Promise<VercelProject> {
   const { token, teamId, projectName, githubRepoSlug, githubToken } = args;
-  void (await getRepoId(githubToken, githubRepoSlug)); // sanity check the repo is accessible
+
+  const s = spinner();
+  s.start(`Creating Vercel project "${projectName}"`);
+
+  try {
+    void (await getRepoId(githubToken, githubRepoSlug)); // sanity check the repo is accessible
+  } catch (err) {
+    s.stop("Could not access GitHub repo");
+    throw err;
+  }
 
   const url = teamId
     ? `${VERCEL_API}/v9/projects?teamId=${teamId}`
     : `${VERCEL_API}/v9/projects`;
-
-  console.log(chalk.gray(`  Creating Vercel project "${projectName}"...`));
 
   const res = await fetch(url, {
     method: "POST",
@@ -49,10 +56,11 @@ export async function createVercelProject(args: CreateProjectArgs): Promise<Verc
 
   if (!res.ok) {
     const body = await res.text();
+    s.stop("Vercel project creation failed");
     throw new Error(`Vercel project creation failed: ${res.status} ${body}`);
   }
 
   const project = (await res.json()) as VercelProject;
-  console.log(chalk.green(`  ✓ Project created: ${project.name} (${project.id})`));
+  s.stop(`Project created: ${project.name}`);
   return project;
 }

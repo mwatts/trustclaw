@@ -3,7 +3,7 @@ import { promisify } from "util";
 import { readFile } from "fs/promises";
 import { homedir } from "os";
 import { join } from "path";
-import chalk from "chalk";
+import { log, spinner } from "@clack/prompts";
 
 const exec = promisify(_exec);
 
@@ -37,8 +37,7 @@ async function getVercelToken(): Promise<string> {
     }
   }
 
-  console.log(chalk.yellow("\nNo Vercel auth found. Run:\n  pnpm dlx vercel login\n"));
-  throw new Error("Vercel CLI not authenticated");
+  throw new Error("No Vercel auth found. Run: pnpm dlx vercel login");
 }
 
 async function getGitHubToken(): Promise<{ token: string; username: string }> {
@@ -47,27 +46,38 @@ async function getGitHubToken(): Promise<{ token: string; username: string }> {
     const { stdout: userJson } = await exec("gh api user --jq '.login'");
     return { token: token.trim(), username: userJson.trim() };
   } catch {
-    console.log(chalk.yellow("\nNo GitHub auth found. Run:\n  gh auth login\n"));
-    throw new Error("GitHub CLI not authenticated");
+    throw new Error("No GitHub auth found. Run: gh auth login");
   }
 }
 
 export async function detectAuth(): Promise<AuthResult> {
-  console.log(chalk.bold("Detecting authentication..."));
+  const s = spinner();
+  s.start("Detecting authentication");
 
-  const vercelToken = await getVercelToken();
-  const { token: githubToken, username: githubUsername } = await getGitHubToken();
+  let vercelToken: string;
+  let githubToken: string;
+  let githubUsername: string;
+  try {
+    vercelToken = await getVercelToken();
+    const gh = await getGitHubToken();
+    githubToken = gh.token;
+    githubUsername = gh.username;
+  } catch (err) {
+    s.stop("Authentication detection failed");
+    throw err;
+  }
 
   const userRes = await fetch("https://api.vercel.com/v2/user", {
     headers: { Authorization: `Bearer ${vercelToken}` },
   });
   if (!userRes.ok) {
+    s.stop("Vercel token invalid");
     throw new Error(`Vercel token invalid: ${userRes.status}`);
   }
   const userData = (await userRes.json()) as { user: { email: string; defaultTeamId?: string } };
 
-  console.log(chalk.green(`  ✓ Vercel: ${userData.user.email}`));
-  console.log(chalk.green(`  ✓ GitHub: ${githubUsername}\n`));
+  s.stop(`Authenticated as ${userData.user.email}`);
+  log.success(`GitHub: ${githubUsername}`);
 
   return {
     vercelToken,

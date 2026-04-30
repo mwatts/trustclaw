@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { spinner } from "@clack/prompts";
 
 interface TriggerArgs {
   token: string;
@@ -8,7 +8,8 @@ interface TriggerArgs {
 }
 
 export async function triggerProductionDeploy(args: TriggerArgs): Promise<{ url: string }> {
-  console.log(chalk.bold("\nTriggering production deployment..."));
+  const s = spinner();
+  s.start("Triggering production deployment");
 
   const url = args.teamId
     ? `https://api.vercel.com/v13/deployments?teamId=${args.teamId}`
@@ -32,11 +33,11 @@ export async function triggerProductionDeploy(args: TriggerArgs): Promise<{ url:
 
   if (!res.ok) {
     const body = await res.text();
+    s.stop("Deploy trigger failed");
     throw new Error(`Deploy trigger failed: ${res.status} ${body}`);
   }
 
   const data = (await res.json()) as { url: string; readyState: string };
-  console.log(chalk.green(`  ✓ Build queued`));
-  console.log(chalk.bold(`\nDeployment URL: https://${data.url}\n`));
+  s.stop("Build queued");
   return { url: data.url };
 }

@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { spinner } from "@clack/prompts";
 import crypto from "crypto";
 
 interface SetEnvArgs {
@@ -33,7 +33,9 @@ export async function setEnvVars(args: SetEnvArgs): Promise<{ betterAuthSecret: 
     },
   ];
 
-  console.log(chalk.bold("\nSetting environment variables..."));
+  const s = spinner();
+  s.start("Setting environment variables");
+
   for (const spec of vars) {
     const url = args.teamId
       ? `https://api.vercel.com/v10/projects/${args.projectId}/env?teamId=${args.teamId}`
@@ -47,10 +49,11 @@ export async function setEnvVars(args: SetEnvArgs): Promise<{ betterAuthSecret: 
 
     if (!res.ok) {
       const body = await res.text();
+      s.stop(`Failed to set ${spec.key}`);
       throw new Error(`Failed to set ${spec.key}: ${res.status} ${body}`);
     }
-    console.log(chalk.green(`  ✓ ${spec.key}`));
   }
 
+  s.stop("Environment variables set");
   return { betterAuthSecret };
 }
