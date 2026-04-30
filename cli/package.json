@@ -1,0 +1,26 @@
+{
+  "name": "trustclaw",
+  "version": "0.1.0",
+  "description": "One-command deploy for trustclaw on Vercel",
+  "type": "module",
+  "bin": {
+    "trustclaw": "./dist/bin.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/bin.ts"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "prompts": "^2.4.2",
+    "chalk": "^5.3.0",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/prompts": "^2.4.9",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
