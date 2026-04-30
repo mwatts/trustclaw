@@ -1,27 +1,69 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- local UI state for Google sign-in loading and error
+// eslint-disable-next-line no-restricted-imports -- local UI state for auth submit pending and form fields
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { TrustClawBrand } from "~/app/_components/trustclaw-brand";
 import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { authClient } from "~/clients/auth/react";
+import { showErrorToast } from "~/components/core/toast-notifications";
 
-export function LoginPage() {
-  const [googlePending, setGooglePending] = useState(false);
-  const [googleError, setGoogleError] = useState<string | null>(null);
+interface LoginPageProps {
+  firstTime?: boolean;
+}
 
-  const handleGoogleSignIn = async () => {
-    setGooglePending(true);
-    setGoogleError(null);
+export function LoginPage({ firstTime = false }: LoginPageProps) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
 
-    const result = await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/dashboard",
-    });
+  // Login form state
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
-    if (result.error) {
-      setGoogleError("Something went wrong. Please try again.");
-      setGooglePending(false);
+  // Register form state
+  const [regEmail, setRegEmail] = useState("");
+  const [regUsername, setRegUsername] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regName, setRegName] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPending(true);
+    try {
+      const result = await authClient.signIn.username({
+        username: loginUsername,
+        password: loginPassword,
+      });
+      if (result.error) {
+        showErrorToast(result.error.message ?? "Failed to sign in");
+        return;
+      }
+      router.push("/dashboard");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPending(true);
+    try {
+      const result = await authClient.signUp.email({
+        email: regEmail,
+        password: regPassword,
+        username: regUsername,
+        name: regName,
+      });
+      if (result.error) {
+        showErrorToast(result.error.message ?? "Failed to create account");
+        return;
+      }
+      router.push("/dashboard");
+    } finally {
+      setPending(false);
     }
   };
 
@@ -33,59 +75,97 @@ export function LoginPage() {
         </div>
 
         <div className="bg-card rounded-lg border p-6 shadow-sm">
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">Sign in</h2>
-              <p className="text-muted-foreground text-sm">
-                to continue to TrustClaw
-              </p>
-            </div>
+          <Tabs defaultValue={firstTime ? "register" : "login"}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
+            </TabsList>
 
-            <div className="space-y-4">
-              <Button
-                variant="outline"
-                className="w-full"
-                disabled={googlePending}
-                onClick={handleGoogleSignIn}
-              >
-                {googlePending ? (
-                  "Redirecting..."
-                ) : (
-                  <>
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="mr-2 h-4 w-4"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                        fill="#4285F4"
-                      />
-                      <path
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        fill="#34A853"
-                      />
-                      <path
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        fill="#FBBC05"
-                      />
-                      <path
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        fill="#EA4335"
-                      />
-                    </svg>
-                    Continue with Google
-                  </>
-                )}
-              </Button>
+            <TabsContent value="login" className="mt-4">
+              <form className="space-y-4" onSubmit={handleLogin}>
+                <div className="space-y-2">
+                  <Label htmlFor="login-username">Username</Label>
+                  <Input
+                    id="login-username"
+                    type="text"
+                    autoComplete="username"
+                    required
+                    value={loginUsername}
+                    onChange={(e) => setLoginUsername(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={pending}>
+                  {pending ? "Signing in..." : "Sign in"}
+                </Button>
+              </form>
+            </TabsContent>
 
-              {googleError && (
-                <p className="text-destructive text-center text-sm">
-                  {googleError}
-                </p>
-              )}
-            </div>
-          </div>
+            <TabsContent value="register" className="mt-4">
+              <form className="space-y-4" onSubmit={handleRegister}>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-name">Name</Label>
+                  <Input
+                    id="reg-name"
+                    type="text"
+                    autoComplete="name"
+                    required
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-email">Email</Label>
+                  <Input
+                    id="reg-email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-username">Username</Label>
+                  <Input
+                    id="reg-username"
+                    type="text"
+                    autoComplete="username"
+                    required
+                    minLength={3}
+                    maxLength={30}
+                    value={regUsername}
+                    onChange={(e) => setRegUsername(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-password">Password</Label>
+                  <Input
+                    id="reg-password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={pending}>
+                  {pending ? "Creating account..." : "Create account"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

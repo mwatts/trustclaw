@@ -27,9 +27,6 @@ export const env = createEnv({
     // Redis (resumable streams, streaming state, abort flags)
     REDIS_URL: z.string(),
 
-    GOOGLE_CLIENT_ID: z.string(),
-    GOOGLE_CLIENT_SECRET: z.string(),
-
     // Composio Twitter toolkit auth config (NOT for sign-in)
     TWITTER_AUTH_CONFIG: z.string(),
   },
@@ -47,8 +44,6 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     CRON_SECRET: process.env.CRON_SECRET,
     REDIS_URL: process.env.REDIS_URL,
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     TWITTER_AUTH_CONFIG: process.env.TWITTER_AUTH_CONFIG,
 
     // Client (in dev, derive from PORT so `PORT=3001 pnpm dev` just works)

@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { username } from "better-auth/plugins";
 import { db } from "~/server/clients/db";
 import { env } from "~/env";
 import { getRedis } from "./clients/redis";
@@ -20,15 +21,14 @@ export const auth = betterAuth({
     ...(env.NODE_ENV === "development" ? [env.NEXT_PUBLIC_APP_URL] : []),
   ],
   database: prismaAdapter(db, { provider: "postgresql" }),
-  emailAndPassword: { enabled: false },
-
-  socialProviders: {
-    google: {
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-    },
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: false,
   },
-  plugins: [nextCookies()],
+  emailVerification: {
+    sendOnSignUp: false,
+  },
+  plugins: [username(), nextCookies()],
   session: {
     expiresIn: 30 * 24 * 60 * 60,
     updateAge: 24 * 60 * 60,
@@ -38,8 +38,12 @@ export const auth = betterAuth({
     window: 60,
     max: 100,
     customRules: {
-      "/sign-in/social": {
+      "/sign-in/username": {
         window: 10,
+        max: 5,
+      },
+      "/sign-up/email": {
+        window: 60,
         max: 5,
       },
     },

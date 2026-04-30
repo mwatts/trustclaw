@@ -35,6 +35,8 @@ model User {
   image           String?
   timezone        String                 @default("UTC")
   isDeveloper     Boolean                @default(false)
+  username        String?                @unique
+  displayUsername String?
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
   sessions        Session[]

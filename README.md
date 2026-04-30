@@ -40,7 +40,7 @@ For Telegram, point your bot's webhook at `<NEXT_PUBLIC_APP_URL>/api/telegram-we
 
 ## Environment variables
 
-See `.env.example` for the full list. At minimum you need: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `COMPOSIO_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `REDIS_URL`, `CRON_SECRET`, and the Telegram trio.
+See `.env.example` for the full list. At minimum you need: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `COMPOSIO_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `REDIS_URL`, `CRON_SECRET`, and the Telegram trio.
 
 ## Tech stack
 
