@@ -10,7 +10,11 @@ pnpm install
 pnpm dlx trustclaw deploy
 ```
 
-The CLI prompts for a Composio API key (free at https://app.composio.dev), auto-generates secrets, provisions Postgres (and optionally Redis) via Vercel Marketplace, and deploys. You'll need:
+The CLI prompts for a Composio API key (free at https://app.composio.dev), auto-generates secrets, provisions Postgres (and optionally Redis) via Vercel Marketplace, and deploys.
+
+After deploy completes, the CLI offers an optional Telegram bot setup (skip if you don't want it) — it walks you through @BotFather, sets the env vars on Vercel, and registers the webhook. Cron jobs are configured automatically in `vercel.json`.
+
+You'll need:
 - A [Vercel account](https://vercel.com) (run `pnpm dlx vercel login` once)
 - A [GitHub account](https://github.com) (run `gh auth login` once)
 - A free [Composio API key](https://app.composio.dev) (~30 sec signup)

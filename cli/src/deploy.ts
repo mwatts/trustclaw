@@ -7,6 +7,7 @@ import { provisionStores } from "./stores.js";
 import { setEnvVars } from "./env-vars.js";
 import { runMigration } from "./migrate.js";
 import { triggerProductionDeploy } from "./trigger-deploy.js";
+import { maybeSetupTelegram } from "./telegram-setup.js";
 
 export async function deploy(): Promise<void> {
   console.clear();
@@ -50,7 +51,21 @@ export async function deploy(): Promise<void> {
     });
 
     note(`https://${result.url}`, "Deployment URL");
-    outro("Visit the URL above to register your first user.");
+
+    await maybeSetupTelegram({
+      vercelToken: auth.vercelToken,
+      vercelTeamId: auth.vercelTeamId,
+      projectId: project.id,
+      deploymentUrl: result.url,
+    });
+
+    note(
+      "Cron jobs are pre-configured in vercel.json and will run automatically once deploy completes.\n" +
+        "View them in your Vercel dashboard under the project's Cron Jobs tab.",
+      "Cron",
+    );
+
+    outro("Visit the deployment URL above to register your first user.");
   } catch (err) {
     cancel(err instanceof Error ? err.message : String(err));
     process.exit(1);
