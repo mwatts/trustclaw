@@ -99,7 +99,7 @@ model ComposioClawInstance {
   userId String @unique
 
   // Anthropic config
-  anthropicModel String @default("claude-sonnet-4-5-20250929")
+  anthropicModel String @default("anthropic/claude-sonnet-4.6")
 
   // Telegram linking
   telegramChatId             String?   @unique

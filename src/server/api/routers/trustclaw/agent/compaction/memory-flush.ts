@@ -1,7 +1,5 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateText, stepCountIs } from "ai";
 import { db } from "~/server/clients/db";
-import { env } from "~/env";
 import { createCustomTools } from "../tools";
 import { serializeMessages } from "./prompts";
 import type { ReconstructedMessage } from "../types";
@@ -36,7 +34,9 @@ export async function runMemoryFlush(
   const { instanceId, anthropicModel, messages, compactionCount } = params;
 
   try {
-    const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY });
+    const modelString = anthropicModel.startsWith("anthropic/")
+      ? anthropicModel
+      : `anthropic/${anthropicModel}`;
 
     const allCustomTools = createCustomTools(instanceId);
     const memoryTools = {
@@ -48,7 +48,7 @@ export async function runMemoryFlush(
     const flushPrompt = `Here is the recent conversation context:\n\n${contextSummary}\n\n${FLUSH_USER_PROMPT}`;
 
     const result = await generateText({
-      model: anthropic(anthropicModel),
+      model: modelString,
       system: FLUSH_SYSTEM_PROMPT,
       messages: [{ role: "user" as const, content: flushPrompt }],
       tools: memoryTools,

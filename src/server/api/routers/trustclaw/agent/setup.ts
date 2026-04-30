@@ -1,4 +1,3 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { ToolLoopAgent, stepCountIs } from "ai";
 import type { ToolSet, SystemModelMessage } from "ai";
 import { db } from "~/server/clients/db";
@@ -173,8 +172,10 @@ export async function prepareAgentRun(
     },
   });
 
-  const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY });
-  const model = anthropic(instance.anthropicModel);
+  const modelString = instance.anthropicModel.startsWith("anthropic/")
+    ? instance.anthropicModel
+    : `anthropic/${instance.anthropicModel}`;
+  const model = modelString;
 
   const agent = new ToolLoopAgent({
     model,

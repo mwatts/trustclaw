@@ -1,10 +1,8 @@
 // Adapted from pi-mono: packages/coding-agent/src/core/compaction/compaction.ts:376-438 (cut point algorithm)
 // Adaptive chunking / staged summarization from openclaw: src/agents/compaction.ts:110-129, 244-305
 // Fallback chain from openclaw: src/agents/compaction.ts:176-242
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import { db } from "~/server/clients/db";
-import { env } from "~/env";
 import type { ReconstructedMessage } from "../types";
 import { estimateMessageTokens } from "../context/token-estimation";
 import {
@@ -71,7 +69,9 @@ async function summarize(
   conversationText: string,
   previousSummary: string | null,
 ): Promise<string> {
-  const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const modelString = anthropicModel.startsWith("anthropic/")
+    ? anthropicModel
+    : `anthropic/${anthropicModel}`;
 
   const safeConversation = sanitizeString(conversationText);
   const safePreviousSummary = previousSummary ? sanitizeString(previousSummary) : null;
@@ -84,7 +84,7 @@ async function summarize(
   }
 
   const result = await generateText({
-    model: anthropic(anthropicModel),
+    model: modelString,
     system: COMPACTION_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }],
     maxOutputTokens: 4_000,
@@ -117,9 +117,11 @@ async function stagedSummarize(
     firstSummary,
   );
 
-  const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const mergeModelString = anthropicModel.startsWith("anthropic/")
+    ? anthropicModel
+    : `anthropic/${anthropicModel}`;
   const mergeResult = await generateText({
-    model: anthropic(anthropicModel),
+    model: mergeModelString,
     system: COMPACTION_SYSTEM_PROMPT,
     messages: [
       {
