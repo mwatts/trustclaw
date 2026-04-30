@@ -9,26 +9,36 @@ const globalForRedis = globalThis as typeof globalThis & {
   redisPublisher: Redis | undefined;
 };
 
+export function isRedisConfigured(): boolean {
+  return !!env.REDIS_URL;
+}
+
 function createRedis(): Redis {
+  if (!env.REDIS_URL) {
+    throw new Error("Redis not configured");
+  }
   const r = new Redis(env.REDIS_URL, { maxRetriesPerRequest: 3 });
   // eslint-disable-next-line @typescript-eslint/no-empty-function -- suppress default ioredis unhandled error crash
   r.on("error", () => {});
   return r;
 }
 
-export function getRedis(): Redis {
+export function getRedis(): Redis | null {
+  if (!env.REDIS_URL) return null;
   globalForRedis.redis ??= createRedis();
   return globalForRedis.redis;
 }
 
 /** Dedicated subscriber connection for pub/sub (enters subscriber mode). */
-export function getRedisSubscriber(): Redis {
+export function getRedisSubscriber(): Redis | null {
+  if (!env.REDIS_URL) return null;
   globalForRedis.redisSubscriber ??= createRedis();
   return globalForRedis.redisSubscriber;
 }
 
 /** Dedicated publisher connection for pub/sub. */
-export function getRedisPublisher(): Redis {
+export function getRedisPublisher(): Redis | null {
+  if (!env.REDIS_URL) return null;
   globalForRedis.redisPublisher ??= createRedis();
   return globalForRedis.redisPublisher;
 }
@@ -44,6 +54,7 @@ export async function setStreamingMessage(
   streamId: string,
 ): Promise<void> {
   const r = getRedis();
+  if (!r) return;
   await r.set(`streaming:${instanceId}`, streamId, "EX", STREAMING_KEY_TTL);
 }
 
@@ -51,6 +62,7 @@ export async function getStreamingMessage(
   instanceId: string,
 ): Promise<string | null> {
   const r = getRedis();
+  if (!r) return null;
   return r.get(`streaming:${instanceId}`);
 }
 
@@ -58,6 +70,7 @@ export async function clearStreamingMessage(
   instanceId: string,
 ): Promise<void> {
   const r = getRedis();
+  if (!r) return;
   await r.del(`streaming:${instanceId}`);
 }
 
@@ -74,6 +87,7 @@ export async function claimTelegramUpdate(
   updateId: number,
 ): Promise<boolean> {
   const r = getRedis();
+  if (!r) return true; // no dedup available — always claim
   const result = await r.set(
     `telegram-update:${updateId}`,
     "1",
@@ -97,6 +111,7 @@ export async function setTelegramActive(
   updateId: number,
 ): Promise<void> {
   const r = getRedis();
+  if (!r) return;
   await r.set(
     `telegram-active:${instanceId}`,
     String(updateId),
@@ -113,6 +128,7 @@ export async function getTelegramActive(
   instanceId: string,
 ): Promise<number | null> {
   const r = getRedis();
+  if (!r) return null;
   const val = await r.get(`telegram-active:${instanceId}`);
   return val ? Number(val) : null;
 }

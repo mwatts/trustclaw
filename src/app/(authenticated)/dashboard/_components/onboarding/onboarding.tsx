@@ -130,6 +130,9 @@ export function Onboarding({
 
   const utils = trpc.useUtils();
 
+  const { data: statusData } = trpc.trustclaw.getStatus.useQuery();
+  const telegramConfigured = statusData?.telegramConfigured ?? true;
+
   const createInstance = trpc.trustclaw.createInstance.useMutation({
     onSuccess: () => {
       void utils.trustclaw.getInstance.invalidate();
@@ -320,14 +323,18 @@ export function Onboarding({
             <ErrorBoundary>
               <IntegrationsStep
                 key="integrations"
-                onNext={() => goToStep("telegram")}
+                onNext={() =>
+                  telegramConfigured ? goToStep("telegram") : handleComplete()
+                }
                 onBack={goBack}
-                onSkip={() => goToStep("telegram")}
+                onSkip={() =>
+                  telegramConfigured ? goToStep("telegram") : handleComplete()
+                }
               />
             </ErrorBoundary>
           )}
 
-          {step === "telegram" && (
+          {step === "telegram" && telegramConfigured && (
             <TelegramStep
               key="telegram"
               onBack={goBack}

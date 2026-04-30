@@ -1,11 +1,21 @@
 import { env } from "~/env";
 
-const TELEGRAM_API_BASE = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}`;
+export function isTelegramConfigured(): boolean {
+  return !!env.TELEGRAM_BOT_TOKEN && !!env.TELEGRAM_BOT_USERNAME;
+}
+
+function getTelegramApiBase(): string {
+  if (!env.TELEGRAM_BOT_TOKEN) {
+    throw new Error("Telegram not configured");
+  }
+  return `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}`;
+}
 
 export async function sendTelegramMessage(
   chatId: string,
   text: string,
 ): Promise<void> {
+  const TELEGRAM_API_BASE = getTelegramApiBase();
   // Try with Markdown formatting first
   const markdownResponse = await fetch(`${TELEGRAM_API_BASE}/sendMessage`, {
     method: "POST",
@@ -43,6 +53,7 @@ export async function sendChatAction(
   chatId: string,
   action: "typing",
 ): Promise<void> {
+  const TELEGRAM_API_BASE = getTelegramApiBase();
   const response = await fetch(`${TELEGRAM_API_BASE}/sendChatAction`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

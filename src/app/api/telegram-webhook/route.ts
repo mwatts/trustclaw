@@ -57,6 +57,10 @@ function describeToolCall(tc: {
 export const maxDuration = 800;
 
 export async function POST(request: Request) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_WEBHOOK_SECRET) {
+    return new Response("Telegram not configured", { status: 503 });
+  }
+
   const secretToken =
     request.headers.get("x-telegram-bot-api-secret-token") ?? "";
   const expectedSecret = env.TELEGRAM_WEBHOOK_SECRET;

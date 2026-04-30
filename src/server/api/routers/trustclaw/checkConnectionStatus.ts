@@ -9,9 +9,9 @@ export const checkConnectionStatus = protectedProcedure
     const userId = ctx.session.user.id;
     const composio = createComposioClient();
     const session = await composio.create(userId, {
-      authConfigs: {
-        twitter: env.TWITTER_AUTH_CONFIG,
-      },
+      authConfigs: env.TWITTER_AUTH_CONFIG
+        ? { twitter: env.TWITTER_AUTH_CONFIG }
+        : {},
     });
 
     const toolkitsInfo = await session.toolkits({

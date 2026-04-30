@@ -1,5 +1,6 @@
 import { protectedProcedure } from "~/server/api/trpc";
 import { db } from "~/server/clients/db";
+import { isTelegramConfigured } from "~/server/clients/telegram";
 
 export const getStatus = protectedProcedure.query(async ({ ctx }) => {
   const userId = ctx.session.user.id;
@@ -18,5 +19,6 @@ export const getStatus = protectedProcedure.query(async ({ ctx }) => {
   return {
     hasInstance: !!instance,
     hasOnboardingState,
+    telegramConfigured: isTelegramConfigured(),
   };
 });

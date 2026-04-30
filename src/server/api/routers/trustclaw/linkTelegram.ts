@@ -3,10 +3,18 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "~/server/api/trpc";
 import { db } from "~/server/clients/db";
 import { env } from "~/env";
+import { isTelegramConfigured } from "~/server/clients/telegram";
 
 const LINK_TOKEN_TTL_MS = 15 * 60 * 1000;
 
 export const linkTelegram = protectedProcedure.mutation(async ({ ctx }) => {
+  if (!isTelegramConfigured()) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Telegram is not configured on this deployment",
+    });
+  }
+
   const userId = ctx.session.user.id;
 
   return db.$transaction(async (tx) => {

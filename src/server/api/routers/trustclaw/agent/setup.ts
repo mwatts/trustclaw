@@ -145,9 +145,9 @@ export async function prepareAgentRun(
     manageConnections: {
       waitForConnections: true,
     },
-    authConfigs: {
-      twitter: env.TWITTER_AUTH_CONFIG,
-    },
+    authConfigs: env.TWITTER_AUTH_CONFIG
+      ? { twitter: env.TWITTER_AUTH_CONFIG }
+      : {},
   });
   const composioTools = await session.tools();
 

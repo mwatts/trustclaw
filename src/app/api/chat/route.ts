@@ -7,7 +7,7 @@ import {
   setStreamingMessage,
   getStreamingMessage,
 } from "~/server/clients/redis";
-import { streamContext } from "./stream-store";
+import { getStreamContext } from "./stream-store";
 import { TRPCError } from "@trpc/server";
 
 const chatRequestBody = z.object({
@@ -93,13 +93,21 @@ export async function POST(request: Request) {
     abortSignal: request.signal,
   });
 
+  const streamContext = getStreamContext();
   return result.toUIMessageStreamResponse({
     headers: {
       "X-Stream-Id": streamId,
     },
-    consumeSseStream: ({ stream }) => {
-      void streamContext.createNewResumableStream(streamId, () => stream);
-    },
+    ...(streamContext
+      ? {
+          consumeSseStream: ({ stream }) => {
+            void streamContext.createNewResumableStream(
+              streamId,
+              () => stream,
+            );
+          },
+        }
+      : {}),
   });
 }
 
@@ -119,6 +127,10 @@ export async function GET(request: Request) {
     return new Response("Stream not found or not yours", { status: 404 });
   }
 
+  const streamContext = getStreamContext();
+  if (!streamContext) {
+    return new Response("Stream resumption not available", { status: 204 });
+  }
   const stream = await streamContext.resumeExistingStream(streamId);
   if (!stream) {
     return new Response("Stream already completed", { status: 204 });

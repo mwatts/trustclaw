@@ -58,9 +58,11 @@ export function SettingsPageClient() {
         <ModelSettings currentModel={instance.anthropicModel} />
       </ErrorBoundary>
 
-      <ErrorBoundary>
-        <TelegramSettings telegramChatId={instance.telegramChatId} />
-      </ErrorBoundary>
+      {data?.telegramConfigured && (
+        <ErrorBoundary>
+          <TelegramSettings telegramChatId={instance.telegramChatId} />
+        </ErrorBoundary>
+      )}
 
       <ErrorBoundary>
         <CronJobsSettings />
