@@ -25,8 +25,5 @@ export const createQueryClient = () =>
     },
   });
 
-/**
- * Cached query client for server-side use.
- * Shared between tRPC and Apollo for unified cache hydration.
- */
+/** Cached query client for server-side use. */
 export const getQueryClient = cache(createQueryClient);

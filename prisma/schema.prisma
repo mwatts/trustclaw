@@ -108,7 +108,7 @@ model ComposioClawInstance {
   telegramLinkToken          String?   @unique
   telegramLinkTokenExpiresAt DateTime?
 
-  // Agent identity (OpenClaw-style, stored as text)
+  // Agent identity, stored as text
   soulPrompt      String?
   identityPrompt  String?
   userPrompt      String?
@@ -195,7 +195,7 @@ model OnboardingState {
   personality    String?
   emoji          String?
   lore           String   @default("") @db.Text
-  anthropicModel String   @default("claude-sonnet-4-5-20250929")
+  anthropicModel String   @default("anthropic/claude-sonnet-4.6")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

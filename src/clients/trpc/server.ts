@@ -39,5 +39,4 @@ export const trpcServer = {
   HydrateClient,
 };
 
-// HydrateClient is shared between tRPC and Apollo (same QueryClient)
 export { HydrateClient };

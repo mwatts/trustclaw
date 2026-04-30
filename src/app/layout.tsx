@@ -1,36 +1,14 @@
 import "~/styles/globals.css";
 
 import { type Metadata } from "next";
-import { IBM_Plex_Mono } from "next/font/google";
-import localFont from "next/font/local";
+import { IBM_Plex_Mono, Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { TRPCReactProvider } from "~/clients/trpc";
 import { ThemeProvider } from "~/components/core/theme-provider";
 
-const primary = localFont({
-  src: [
-    {
-      path: "./_fonts/ABC Diatype/ABCDiatype-Regular-Trial.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "./_fonts/ABC Diatype/ABCDiatype-RegularItalic-Trial.woff2",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "./_fonts/ABC Diatype/ABCDiatype-Medium-Trial.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "./_fonts/ABC Diatype/ABCDiatype-Bold-Trial.woff2",
-      weight: "700",
-      style: "normal",
-    },
-  ],
-  variable: "--font-abc-diatype",
+const primary = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
   display: "swap",
 });
 const code = IBM_Plex_Mono({
