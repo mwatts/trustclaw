@@ -107,9 +107,6 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      openai:
-        specifier: ^6.35.0
-        version: 6.35.0(zod@3.25.76)
       pg:
         specifier: ^8.18.0
         version: 8.18.0

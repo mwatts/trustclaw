@@ -24,9 +24,6 @@ export const env = createEnv({
     // Vercel cron (optional at build time, guarded at runtime in cron handlers)
     CRON_SECRET: z.string().min(1),
 
-    // OpenAI (used for memory embeddings — text-embedding-3-large, 1024 dims)
-    OPENAI_API_KEY: z.string(),
-
     // Redis (resumable streams, streaming state, abort flags)
     REDIS_URL: z.string(),
 
@@ -49,7 +46,6 @@ export const env = createEnv({
     TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     CRON_SECRET: process.env.CRON_SECRET,
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     REDIS_URL: process.env.REDIS_URL,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
