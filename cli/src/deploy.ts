@@ -3,6 +3,7 @@ import { detectAuth } from "./auth.js";
 import { gatherInputs } from "./inputs.js";
 import { forkRepo } from "./github.js";
 import { createVercelProject } from "./vercel.js";
+import { provisionStores } from "./stores.js";
 
 export async function deploy(): Promise<void> {
   console.log(chalk.bold("\nDeploying trustclaw to Vercel\n"));
@@ -22,6 +23,14 @@ export async function deploy(): Promise<void> {
     githubToken: auth.githubToken,
   });
 
-  console.log(chalk.gray(`\n(stub — would set env vars + provision DB next)`));
-  void project;
+  console.log(chalk.bold("\nProvisioning stores..."));
+  const stores = await provisionStores({
+    token: auth.vercelToken,
+    teamId: auth.vercelTeamId,
+    projectId: project.id,
+    enableRedis: inputs.enableRedis,
+  });
+
+  console.log(chalk.gray(`\n(stub — env vars + migration + deploy in next task)`));
+  void stores;
 }
