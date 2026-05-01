@@ -21,6 +21,7 @@ import {
   listProjectEnvKeys,
   lookupExistingProject,
 } from "./vercel-env.js";
+import { loadConfig, saveConfig } from "./config.js";
 
 export async function deploy(): Promise<void> {
   console.clear();
@@ -29,7 +30,12 @@ export async function deploy(): Promise<void> {
   try {
     const auth = await detectAuth();
 
-    const projectName = await askProjectName();
+    // Detect local checkout up front so we can read cached defaults from
+    // .trustclaw-deploy.json (project name, repo name) and pre-fill prompts.
+    const localRepo = await detectLocalRepo();
+    const cachedConfig = localRepo ? await loadConfig(localRepo.rootDir) : {};
+
+    const projectName = await askProjectName(cachedConfig.vercelProjectName);
 
     // Pre-flight: if the project already exists, fetch its env keys so we can
     // skip prompts (Composio key, Redis question, Telegram setup) for anything
@@ -68,10 +74,9 @@ export async function deploy(): Promise<void> {
       existingComposioKeyValid,
     });
 
-    const localRepo = await detectLocalRepo();
     let repo: string;
     if (localRepo) {
-      const choice = await confirmLocalPublish(localRepo);
+      const choice = await confirmLocalPublish(localRepo, cachedConfig.githubRepoName);
       if (choice) {
         await applyPlanConfig(localRepo.rootDir, auth.vercelBillingPlan);
         ({ repo } = await publishLocalCopy({
@@ -81,6 +86,7 @@ export async function deploy(): Promise<void> {
           rootDir: localRepo.rootDir,
           currentBranch: localRepo.currentBranch,
         }));
+        await saveConfig(localRepo.rootDir, { githubRepoName: choice.repoName });
       } else {
         ({ repo } = await forkRepo(auth.githubToken, auth.githubUsername));
       }
@@ -95,6 +101,12 @@ export async function deploy(): Promise<void> {
       githubRepoSlug: repo,
       githubToken: auth.githubToken,
     });
+
+    // Project created/reused successfully — cache the name so future runs
+    // skip the prompt.
+    if (localRepo) {
+      await saveConfig(localRepo.rootDir, { vercelProjectName: project.name });
+    }
 
     const stores = await provisionStores({
       token: auth.vercelToken,

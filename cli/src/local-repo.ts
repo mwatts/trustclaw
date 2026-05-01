@@ -116,7 +116,10 @@ export async function publishLocalCopy(args: PublishArgs): Promise<{ repo: strin
   return { repo: targetRepo };
 }
 
-export async function confirmLocalPublish(info: LocalRepoInfo): Promise<{
+export async function confirmLocalPublish(
+  info: LocalRepoInfo,
+  defaultRepoName?: string,
+): Promise<{
   repoName: string;
 } | null> {
   log.info(
@@ -152,7 +155,7 @@ export async function confirmLocalPublish(info: LocalRepoInfo): Promise<{
 
   const repoName = await text({
     message: "GitHub repo name (will be created as private under your account)",
-    initialValue: "trustclaw",
+    initialValue: defaultRepoName ?? "trustclaw",
     validate: (v) =>
       v && /^[a-zA-Z0-9._-]+$/.test(v)
         ? undefined

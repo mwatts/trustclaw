@@ -39,6 +39,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# trustclaw deploy CLI cache
+.trustclaw-deploy.json
+
 # typescript
 *.tsbuildinfo
 

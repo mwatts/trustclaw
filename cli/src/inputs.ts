@@ -19,11 +19,11 @@ function ensure<T>(value: T | symbol): T {
   return value as T;
 }
 
-export async function askProjectName(): Promise<string> {
+export async function askProjectName(defaultName?: string): Promise<string> {
   return ensure(
     await text({
       message: "Vercel project name",
-      initialValue: "trustclaw",
+      initialValue: defaultName ?? "trustclaw",
       validate: (v) =>
         v && /^[a-z0-9-]+$/.test(v)
           ? undefined
