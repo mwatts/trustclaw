@@ -5,7 +5,10 @@ interface SetEnvArgs {
   token: string;
   teamId: string | null;
   projectId: string;
-  composioApiKey: string;
+  // null when the project already has COMPOSIO_API_KEY set and we're reusing it.
+  composioApiKey: string | null;
+  // true when BETTER_AUTH_SECRET is already on the project — skip generating a new one.
+  hasBetterAuthSecret: boolean;
 }
 
 interface EnvVarSpec {
@@ -15,23 +18,28 @@ interface EnvVarSpec {
   type: "encrypted" | "plain";
 }
 
-export async function setEnvVars(args: SetEnvArgs): Promise<{ betterAuthSecret: string }> {
-  const betterAuthSecret = crypto.randomBytes(32).toString("base64");
+export async function setEnvVars(args: SetEnvArgs): Promise<void> {
+  const vars: EnvVarSpec[] = [];
 
-  const vars: EnvVarSpec[] = [
-    {
+  if (!args.hasBetterAuthSecret) {
+    vars.push({
       key: "BETTER_AUTH_SECRET",
-      value: betterAuthSecret,
+      value: crypto.randomBytes(32).toString("base64"),
       target: ["production", "preview", "development"],
       type: "encrypted",
-    },
-    {
+    });
+  }
+
+  if (args.composioApiKey !== null) {
+    vars.push({
       key: "COMPOSIO_API_KEY",
       value: args.composioApiKey,
       target: ["production", "preview", "development"],
       type: "encrypted",
-    },
-  ];
+    });
+  }
+
+  if (vars.length === 0) return;
 
   const s = spinner();
   s.start("Setting environment variables");
@@ -55,5 +63,4 @@ export async function setEnvVars(args: SetEnvArgs): Promise<{ betterAuthSecret: 
   }
 
   s.stop("Environment variables set");
-  return { betterAuthSecret };
 }

@@ -1,6 +1,6 @@
 import { intro, outro, note, cancel } from "@clack/prompts";
 import { detectAuth } from "./auth.js";
-import { gatherInputs } from "./inputs.js";
+import { askProjectName, gatherRemainingInputs } from "./inputs.js";
 import { forkRepo } from "./github.js";
 import {
   detectLocalRepo,
@@ -14,6 +14,7 @@ import { setEnvVars } from "./env-vars.js";
 import { runMigration } from "./migrate.js";
 import { triggerProductionDeploy } from "./trigger-deploy.js";
 import { maybeSetupTelegram } from "./telegram-setup.js";
+import { listProjectEnvKeys, lookupExistingProject } from "./vercel-env.js";
 
 export async function deploy(): Promise<void> {
   console.clear();
@@ -21,7 +22,26 @@ export async function deploy(): Promise<void> {
 
   try {
     const auth = await detectAuth();
-    const inputs = await gatherInputs(auth.githubUsername);
+
+    const projectName = await askProjectName();
+
+    // Pre-flight: if the project already exists, fetch its env keys so we can
+    // skip prompts (Composio key, Redis question, Telegram setup) for anything
+    // that's already been configured on a prior run.
+    const existingProject = await lookupExistingProject({
+      token: auth.vercelToken,
+      teamId: auth.vercelTeamId,
+      projectName,
+    });
+    const existingEnvKeys = existingProject
+      ? await listProjectEnvKeys({
+          token: auth.vercelToken,
+          teamId: auth.vercelTeamId,
+          projectId: existingProject.id,
+        })
+      : new Set<string>();
+
+    const remaining = await gatherRemainingInputs({ existingEnvKeys });
 
     const localRepo = await detectLocalRepo();
     let repo: string;
@@ -46,7 +66,7 @@ export async function deploy(): Promise<void> {
     const project = await createVercelProject({
       token: auth.vercelToken,
       teamId: auth.vercelTeamId,
-      projectName: inputs.projectName,
+      projectName,
       githubRepoSlug: repo,
       githubToken: auth.githubToken,
     });
@@ -57,14 +77,15 @@ export async function deploy(): Promise<void> {
       projectId: project.id,
       projectName: project.name,
       ownerSlug: auth.vercelOwnerSlug,
-      enableRedis: inputs.enableRedis,
+      enableRedis: remaining.enableRedis,
     });
 
     await setEnvVars({
       token: auth.vercelToken,
       teamId: auth.vercelTeamId,
       projectId: project.id,
-      composioApiKey: inputs.composioApiKey,
+      composioApiKey: remaining.composioApiKey,
+      hasBetterAuthSecret: existingEnvKeys.has("BETTER_AUTH_SECRET"),
     });
 
     await runMigration(stores.databaseUrl);
@@ -83,6 +104,8 @@ export async function deploy(): Promise<void> {
       vercelTeamId: auth.vercelTeamId,
       projectId: project.id,
       deploymentUrl: result.url,
+      githubRepoSlug: repo,
+      existingEnvKeys,
     });
 
     note(

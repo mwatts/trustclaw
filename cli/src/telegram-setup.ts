@@ -10,15 +10,29 @@ import {
 } from "@clack/prompts";
 import open from "open";
 import crypto from "crypto";
+import { triggerProductionDeploy } from "./trigger-deploy.js";
 
 interface TelegramSetupArgs {
   vercelToken: string;
   vercelTeamId: string | null;
   projectId: string;
   deploymentUrl: string;
+  githubRepoSlug: string;
+  existingEnvKeys: Set<string>;
 }
 
 export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boolean> {
+  const TELEGRAM_KEYS = [
+    "TELEGRAM_BOT_TOKEN",
+    "TELEGRAM_BOT_USERNAME",
+    "TELEGRAM_WEBHOOK_SECRET",
+  ];
+  const allTelegramKeysSet = TELEGRAM_KEYS.every((k) => args.existingEnvKeys.has(k));
+  if (allTelegramKeysSet) {
+    log.info("Telegram already configured on this project — skipping setup.");
+    return true;
+  }
+
   const wantsTelegram = await confirm({
     message: "Set up Telegram bot? (chat with your agent from your phone)",
     initialValue: false,
@@ -30,14 +44,6 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
   if (!wantsTelegram) {
     return false;
   }
-
-  note(
-    "1. Open Telegram and message @BotFather\n" +
-      "2. Send /newbot and follow the prompts\n" +
-      "3. @BotFather will give you a bot token (looks like: 1234:ABC...) and a username\n" +
-      "4. Come back here with both",
-    "Create a bot with @BotFather",
-  );
 
   const openBotFather = await confirm({
     message: "Open @BotFather in your browser?",
@@ -51,8 +57,18 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
     await open("https://t.me/BotFather");
   }
 
+  note(
+    `In your @BotFather chat:\n` +
+      `  1. Send /newbot\n` +
+      `  2. Pick a display name (e.g. "My TrustClaw")\n` +
+      `  3. Pick a username — must end in "bot" (e.g. my_trustclaw_bot)\n` +
+      `  4. @BotFather replies with a token like 1234567:ABC-DEF...\n` +
+      `  5. Copy the token and paste it below`,
+    "Get your bot token",
+  );
+
   const botToken = await password({
-    message: "Bot token from @BotFather",
+    message: "Bot token from @BotFather (the 1234567:ABC-DEF... line)",
     validate: (v) =>
       v && /^\d+:[A-Za-z0-9_-]+$/.test(v)
         ? undefined
@@ -112,11 +128,15 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
   }
   s2.stop("Telegram webhook registered");
 
-  log.info(
-    "Note: env vars are set, but the running deployment may not have them yet. " +
-      "Vercel will use them on the NEXT deploy. To force a redeploy now, push any commit or " +
-      "use the Vercel dashboard's Redeploy button.",
-  );
+  // The running deployment doesn't have the new env vars baked in yet — kick a
+  // fresh production deploy so the bot actually works as soon as the build lands.
+  const redeployed = await triggerProductionDeploy({
+    token: args.vercelToken,
+    teamId: args.vercelTeamId,
+    projectId: args.projectId,
+    githubRepoSlug: args.githubRepoSlug,
+  });
+  log.success(`Redeploy queued: https://${redeployed.url}`);
 
   return true;
 }
@@ -127,8 +147,8 @@ async function setVercelEnv(
   value: string,
 ): Promise<void> {
   const url = args.vercelTeamId
-    ? `https://api.vercel.com/v10/projects/${args.projectId}/env?teamId=${args.vercelTeamId}`
-    : `https://api.vercel.com/v10/projects/${args.projectId}/env`;
+    ? `https://api.vercel.com/v10/projects/${args.projectId}/env?teamId=${args.vercelTeamId}&upsert=true`
+    : `https://api.vercel.com/v10/projects/${args.projectId}/env?upsert=true`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
