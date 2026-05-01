@@ -11,6 +11,7 @@ export interface AuthResult {
   vercelToken: string;
   vercelTeamId: string | null;
   vercelOwnerSlug: string;
+  vercelBillingPlan: string; // "hobby" | "pro" | "enterprise" | etc.
   githubToken: string;
   githubUsername: string;
 }
@@ -76,7 +77,12 @@ export async function detectAuth(): Promise<AuthResult> {
     throw new Error(`Vercel token invalid: ${userRes.status}`);
   }
   const userData = (await userRes.json()) as {
-    user: { email: string; username: string; defaultTeamId?: string };
+    user: {
+      email: string;
+      username: string;
+      defaultTeamId?: string;
+      billing?: { plan?: string };
+    };
   };
 
   const teamId = userData.user.defaultTeamId ?? null;
@@ -84,27 +90,34 @@ export async function detectAuth(): Promise<AuthResult> {
   // The dashboard URL is scoped by team slug (or username for personal accounts).
   // Personal/Hobby accounts have a default team like "<username>-projects".
   let ownerSlug = userData.user.username;
+  // Team billing plan takes precedence when deploying to a team scope.
+  let billingPlan = userData.user.billing?.plan ?? "hobby";
   if (teamId) {
     try {
       const teamRes = await fetch(`https://api.vercel.com/v2/teams/${teamId}`, {
         headers: { Authorization: `Bearer ${vercelToken}` },
       });
       if (teamRes.ok) {
-        const teamData = (await teamRes.json()) as { slug?: string };
+        const teamData = (await teamRes.json()) as {
+          slug?: string;
+          billing?: { plan?: string };
+        };
         if (teamData.slug) ownerSlug = teamData.slug;
+        if (teamData.billing?.plan) billingPlan = teamData.billing.plan;
       }
     } catch {
-      // fall back to username
+      // fall back to user-level fields
     }
   }
 
-  s.stop(`Authenticated as ${userData.user.email}`);
+  s.stop(`Authenticated as ${userData.user.email} (${billingPlan} plan)`);
   log.success(`GitHub: ${githubUsername}`);
 
   return {
     vercelToken,
     vercelTeamId: teamId,
     vercelOwnerSlug: ownerSlug,
+    vercelBillingPlan: billingPlan,
     githubToken,
     githubUsername,
   };

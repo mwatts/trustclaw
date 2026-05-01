@@ -7,6 +7,7 @@ import {
   confirmLocalPublish,
   publishLocalCopy,
 } from "./local-repo.js";
+import { applyCronScheduleForPlan } from "./cron-config.js";
 import { createVercelProject } from "./vercel.js";
 import { provisionStores } from "./stores.js";
 import { setEnvVars } from "./env-vars.js";
@@ -27,6 +28,7 @@ export async function deploy(): Promise<void> {
     if (localRepo) {
       const choice = await confirmLocalPublish(localRepo);
       if (choice) {
+        await applyCronScheduleForPlan(localRepo.rootDir, auth.vercelBillingPlan);
         ({ repo } = await publishLocalCopy({
           token: auth.githubToken,
           username: auth.githubUsername,
