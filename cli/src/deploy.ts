@@ -9,7 +9,7 @@ import {
   publishLocalCopy,
 } from "./local-repo.js";
 import { applyPlanConfig } from "./cron-config.js";
-import { createVercelProject } from "./vercel.js";
+import { createVercelProject, disableDeploymentProtection } from "./vercel.js";
 import { provisionStores } from "./stores.js";
 import { setEnvVars } from "./env-vars.js";
 import { runMigration } from "./migrate.js";
@@ -107,6 +107,14 @@ export async function deploy(): Promise<void> {
     if (localRepo) {
       await saveConfig(localRepo.rootDir, { vercelProjectName: project.name });
     }
+
+    // Vercel enables SSO on new projects by default ("all_except_custom_domains"),
+    // which makes external webhooks (Telegram, etc.) hit a login wall. Turn it off.
+    await disableDeploymentProtection({
+      token: auth.vercelToken,
+      teamId: auth.vercelTeamId,
+      projectId: project.id,
+    });
 
     const stores = await provisionStores({
       token: auth.vercelToken,

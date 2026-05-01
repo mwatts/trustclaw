@@ -204,5 +204,22 @@ async function registerTelegramWebhook(args: {
   );
   if (!res.ok) return false;
   const data = (await res.json()) as { ok: boolean; description?: string };
-  return data.ok;
+  if (!data.ok) return false;
+
+  // Verify Telegram actually stored the URL we asked for, and warn otherwise —
+  // catches silent drift if the registration appears to succeed but the stored
+  // URL is wrong (e.g. URL canonicalization, prior registration sticking).
+  const verifyRes = await fetch(
+    `https://api.telegram.org/bot${args.botToken}/getWebhookInfo`,
+  );
+  if (verifyRes.ok) {
+    const info = (await verifyRes.json()) as { result?: { url?: string } };
+    const stored = info.result?.url;
+    if (stored && stored !== webhookUrl) {
+      log.warn(
+        `Telegram stored a different webhook URL than requested.\n  expected: ${webhookUrl}\n  got:      ${stored}`,
+      );
+    }
+  }
+  return true;
 }
