@@ -1,4 +1,5 @@
 import { intro, outro, note, cancel } from "@clack/prompts";
+import open from "open";
 import { detectAuth } from "./auth.js";
 import { askProjectName, gatherRemainingInputs } from "./inputs.js";
 import { forkRepo } from "./github.js";
@@ -99,7 +100,9 @@ export async function deploy(): Promise<void> {
 
     // Print outside the clack box so the URL doesn't wrap across lines and
     // stays copy-friendly.
-    console.log(`\n  Deployment URL: https://${result.url}\n`);
+    const deploymentUrl = `https://${result.url}`;
+    console.log(`\n  Deployment URL: ${deploymentUrl}\n`);
+    await open(deploymentUrl).catch(() => {});
 
     await maybeSetupTelegram({
       vercelToken: auth.vercelToken,
