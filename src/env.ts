@@ -42,11 +42,21 @@ export const env = createEnv({
     REDIS_URL: process.env.REDIS_URL,
     TWITTER_AUTH_CONFIG: process.env.TWITTER_AUTH_CONFIG,
 
-    // Client (in dev, derive from PORT so `PORT=3001 pnpm dev` just works)
+    // Client URL resolution:
+    //  - dev: derive from PORT so `PORT=3001 pnpm dev` just works
+    //  - prod with explicit override: use NEXT_PUBLIC_APP_URL
+    //  - on Vercel: fall back to the auto-injected canonical URL so self-hosters
+    //    don't need to set anything (VERCEL_PROJECT_PRODUCTION_URL is the
+    //    stable production domain; VERCEL_URL is the per-deployment URL)
     NEXT_PUBLIC_APP_URL:
       process.env.NODE_ENV === "development"
         ? `http://localhost:${process.env.PORT ?? "3000"}`
-        : process.env.NEXT_PUBLIC_APP_URL,
+        : process.env.NEXT_PUBLIC_APP_URL ??
+          (process.env.VERCEL_PROJECT_PRODUCTION_URL
+            ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+            : process.env.VERCEL_URL
+              ? `https://${process.env.VERCEL_URL}`
+              : undefined),
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,
