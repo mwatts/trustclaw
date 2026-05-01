@@ -14,11 +14,18 @@ const PRO_SCHEDULE = "* * * * *";
 const HOBBY_MAX_DURATION = 60;
 const PRO_MAX_DURATION = 300;
 
+// Leave a buffer so tRPC closes its SSE stream before Vercel kills the function.
+const HOBBY_TRPC_MAX_DURATION_MS = 50_000;
+const PRO_TRPC_MAX_DURATION_MS = 270_000;
+
 const ROUTE_FILES_WITH_MAX_DURATION = [
   "src/app/api/chat/route.ts",
   "src/app/api/cron/trustclaw/execute/route.ts",
   "src/app/api/telegram-webhook/route.ts",
+  "src/app/api/trpc/[trpc]/route.ts",
 ];
+
+const TRPC_CONFIG_FILE = "src/server/api/trpc.ts";
 
 interface VercelJson {
   crons?: Array<{ path: string; schedule: string }>;
@@ -62,6 +69,26 @@ async function rewriteMaxDuration(rootDir: string, value: number): Promise<boole
   return anyChanged;
 }
 
+async function rewriteTrpcMaxDurationMs(
+  rootDir: string,
+  valueMs: number,
+): Promise<boolean> {
+  const path = join(rootDir, TRPC_CONFIG_FILE);
+  let raw: string;
+  try {
+    raw = await readFile(path, "utf-8");
+  } catch {
+    return false;
+  }
+  const re = /maxDurationMs:\s*[\d_]+/;
+  // Format with underscores for readability (50_000 / 270_000).
+  const formatted = valueMs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "_");
+  const next = raw.replace(re, `maxDurationMs: ${formatted}`);
+  if (next === raw) return false;
+  await writeFile(path, next, "utf-8");
+  return true;
+}
+
 /**
  * Adjust plan-sensitive config (cron schedule + serverless function maxDuration)
  * to fit the user's Vercel plan, then commit so it lands in the pushed copy.
@@ -71,19 +98,25 @@ export async function applyPlanConfig(rootDir: string, plan: string): Promise<vo
   const isHobby = plan === "hobby";
   const schedule = isHobby ? HOBBY_SCHEDULE : PRO_SCHEDULE;
   const maxDuration = isHobby ? HOBBY_MAX_DURATION : PRO_MAX_DURATION;
+  const trpcMaxDurationMs = isHobby
+    ? HOBBY_TRPC_MAX_DURATION_MS
+    : PRO_TRPC_MAX_DURATION_MS;
 
   const s = spinner();
   s.start(`Tuning config for ${plan} plan`);
 
   const cronChanged = await rewriteCronSchedule(rootDir, schedule);
   const durationChanged = await rewriteMaxDuration(rootDir, maxDuration);
+  const trpcChanged = await rewriteTrpcMaxDurationMs(rootDir, trpcMaxDurationMs);
 
-  if (!cronChanged && !durationChanged) {
+  if (!cronChanged && !durationChanged && !trpcChanged) {
     s.stop(`Config already matches ${plan} plan`);
     return;
   }
 
-  await exec("git add vercel.json src/app/api", { cwd: rootDir });
+  await exec("git add vercel.json src/app/api src/server/api/trpc.ts", {
+    cwd: rootDir,
+  });
   const { stdout: staged } = await exec("git diff --cached --name-only", {
     cwd: rootDir,
   });
