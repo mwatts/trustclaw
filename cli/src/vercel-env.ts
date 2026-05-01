@@ -80,3 +80,40 @@ export async function lookupExistingProject(args: {
   const data = (await res.json()) as { id: string };
   return { id: data.id };
 }
+
+/**
+ * Fetch the canonical production alias for a project (e.g. "trustclaw.vercel.app")
+ * from the project's targets.production.alias list. Picks the shortest alias since
+ * Vercel returns multiple variants and the shortest is the stable one.
+ *
+ * Falls back to `<projectName>.vercel.app` if the API call fails.
+ */
+export async function getProductionAlias(args: {
+  token: string;
+  teamId: string | null;
+  projectId: string;
+  projectName: string;
+}): Promise<string> {
+  const url = args.teamId
+    ? `https://api.vercel.com/v9/projects/${args.projectId}?teamId=${args.teamId}`
+    : `https://api.vercel.com/v9/projects/${args.projectId}`;
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${args.token}` },
+    });
+    if (res.ok) {
+      const data = (await res.json()) as {
+        targets?: { production?: { alias?: string[] } };
+      };
+      const aliases = data.targets?.production?.alias ?? [];
+      if (aliases.length > 0) {
+        // Shortest alias is the canonical one (e.g. project.vercel.app vs
+        // project-team-slug.vercel.app vs project-git-branch-team.vercel.app).
+        return [...aliases].sort((a, b) => a.length - b.length)[0]!;
+      }
+    }
+  } catch {
+    // fall through
+  }
+  return `${args.projectName}.vercel.app`;
+}

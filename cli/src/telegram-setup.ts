@@ -11,6 +11,7 @@ import {
 import open from "open";
 import crypto from "crypto";
 import { triggerProductionDeploy } from "./trigger-deploy.js";
+import { fetchProjectEnvValue } from "./vercel-env.js";
 
 interface TelegramSetupArgs {
   vercelToken: string;
@@ -29,7 +30,31 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
   ];
   const allTelegramKeysSet = TELEGRAM_KEYS.every((k) => args.existingEnvKeys.has(k));
   if (allTelegramKeysSet) {
-    log.info("Telegram already configured on this project — skipping setup.");
+    // Skip the prompts but re-register the webhook against the (possibly new)
+    // stable deployment URL — the previous registration may point at a stale
+    // per-deployment URL.
+    const lookup = {
+      token: args.vercelToken,
+      teamId: args.vercelTeamId,
+      projectId: args.projectId,
+    };
+    const existingToken = await fetchProjectEnvValue(lookup, "TELEGRAM_BOT_TOKEN");
+    const existingSecret = await fetchProjectEnvValue(
+      lookup,
+      "TELEGRAM_WEBHOOK_SECRET",
+    );
+    if (existingToken && existingSecret) {
+      const s = spinner();
+      s.start("Refreshing Telegram webhook with stable deployment URL");
+      const ok = await registerTelegramWebhook({
+        botToken: existingToken,
+        webhookSecret: existingSecret,
+        deploymentUrl: args.deploymentUrl,
+      });
+      s.stop(ok ? "Telegram webhook refreshed" : "Telegram webhook refresh failed");
+    } else {
+      log.info("Telegram already configured on this project — skipping setup.");
+    }
     return true;
   }
 
@@ -100,30 +125,18 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
 
   const s2 = spinner();
   s2.start("Registering webhook with Telegram");
-  const webhookUrl = `https://${args.deploymentUrl}/api/telegram-webhook`;
-  const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      url: webhookUrl,
-      secret_token: webhookSecret,
-      allowed_updates: ["message", "edited_message"],
-    }),
+  const webhookOk = await registerTelegramWebhook({
+    botToken,
+    webhookSecret,
+    deploymentUrl: args.deploymentUrl,
   });
-  if (!tgRes.ok) {
+  if (!webhookOk) {
     s2.stop("Webhook registration failed");
-    const body = await tgRes.text();
-    log.error(`Telegram API: ${body}`);
+    const webhookUrl = `https://${args.deploymentUrl}/api/telegram-webhook`;
     log.warn(
       "You can register manually later with: " +
         `curl -X POST "https://api.telegram.org/bot<TOKEN>/setWebhook" -d "url=${webhookUrl}&secret_token=<SECRET>"`,
     );
-    return true;
-  }
-  const tgData = (await tgRes.json()) as { ok: boolean; description?: string };
-  if (!tgData.ok) {
-    s2.stop("Webhook registration failed");
-    log.error(tgData.description ?? "Unknown error from Telegram");
     return true;
   }
   s2.stop("Telegram webhook registered");
@@ -169,4 +182,27 @@ async function setVercelEnv(
     const body = await res.text();
     throw new Error(`Failed to set ${key}: ${res.status} ${body}`);
   }
+}
+
+async function registerTelegramWebhook(args: {
+  botToken: string;
+  webhookSecret: string;
+  deploymentUrl: string;
+}): Promise<boolean> {
+  const webhookUrl = `https://${args.deploymentUrl}/api/telegram-webhook`;
+  const res = await fetch(
+    `https://api.telegram.org/bot${args.botToken}/setWebhook`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: webhookUrl,
+        secret_token: args.webhookSecret,
+        allowed_updates: ["message", "edited_message"],
+      }),
+    },
+  );
+  if (!res.ok) return false;
+  const data = (await res.json()) as { ok: boolean; description?: string };
+  return data.ok;
 }

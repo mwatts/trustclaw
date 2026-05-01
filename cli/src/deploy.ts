@@ -17,6 +17,7 @@ import { triggerProductionDeploy } from "./trigger-deploy.js";
 import { maybeSetupTelegram } from "./telegram-setup.js";
 import {
   fetchProjectEnvValue,
+  getProductionAlias,
   listProjectEnvKeys,
   lookupExistingProject,
 } from "./vercel-env.js";
@@ -127,11 +128,21 @@ export async function deploy(): Promise<void> {
     console.log(`\n  Deployment URL: ${deploymentUrl}\n`);
     await open(deploymentUrl).catch(() => {});
 
+    // Use the stable production alias (e.g. trustclaw-test.vercel.app) for the
+    // Telegram webhook so it survives across redeploys. The per-deployment URL
+    // returned by triggerProductionDeploy changes on every push.
+    const stableUrl = await getProductionAlias({
+      token: auth.vercelToken,
+      teamId: auth.vercelTeamId,
+      projectId: project.id,
+      projectName: project.name,
+    });
+
     await maybeSetupTelegram({
       vercelToken: auth.vercelToken,
       vercelTeamId: auth.vercelTeamId,
       projectId: project.id,
-      deploymentUrl: result.url,
+      deploymentUrl: stableUrl,
       githubRepoSlug: repo,
       existingEnvKeys,
     });
