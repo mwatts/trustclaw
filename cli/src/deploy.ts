@@ -1,7 +1,7 @@
 import { intro, outro, note, cancel } from "@clack/prompts";
 import open from "open";
 import { detectAuth } from "./auth.js";
-import { askProjectName, gatherRemainingInputs } from "./inputs.js";
+import { askProjectName, gatherRemainingInputs, isValidComposioKey } from "./inputs.js";
 import { forkRepo } from "./github.js";
 import {
   detectLocalRepo,
@@ -15,7 +15,11 @@ import { setEnvVars } from "./env-vars.js";
 import { runMigration } from "./migrate.js";
 import { triggerProductionDeploy } from "./trigger-deploy.js";
 import { maybeSetupTelegram } from "./telegram-setup.js";
-import { listProjectEnvKeys, lookupExistingProject } from "./vercel-env.js";
+import {
+  fetchProjectEnvValue,
+  listProjectEnvKeys,
+  lookupExistingProject,
+} from "./vercel-env.js";
 
 export async function deploy(): Promise<void> {
   console.clear();
@@ -42,7 +46,26 @@ export async function deploy(): Promise<void> {
         })
       : new Set<string>();
 
-    const remaining = await gatherRemainingInputs({ existingEnvKeys });
+    // If COMPOSIO_API_KEY exists, sanity-check the value is actually a Composio
+    // key (we've seen UI text accidentally pasted) so we can re-prompt instead
+    // of silently reusing junk.
+    let existingComposioKeyValid = false;
+    if (existingProject && existingEnvKeys.has("COMPOSIO_API_KEY")) {
+      const value = await fetchProjectEnvValue(
+        {
+          token: auth.vercelToken,
+          teamId: auth.vercelTeamId,
+          projectId: existingProject.id,
+        },
+        "COMPOSIO_API_KEY",
+      );
+      existingComposioKeyValid = isValidComposioKey(value);
+    }
+
+    const remaining = await gatherRemainingInputs({
+      existingEnvKeys,
+      existingComposioKeyValid,
+    });
 
     const localRepo = await detectLocalRepo();
     let repo: string;

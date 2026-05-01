@@ -32,17 +32,35 @@ export async function askProjectName(): Promise<string> {
   );
 }
 
+// Composio keys are alphanumeric (with underscores/dashes) and start with `comp_`.
+// Reject anything else — we've seen UI text get pasted into the prompt by accident.
+const COMPOSIO_KEY_RE = /^comp_[A-Za-z0-9_-]{10,}$/;
+
+export function isValidComposioKey(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return COMPOSIO_KEY_RE.test(value.trim());
+}
+
 interface RemainingInputsArgs {
   existingEnvKeys: Set<string>;
+  existingComposioKeyValid: boolean;
 }
 
 export async function gatherRemainingInputs(
   args: RemainingInputsArgs,
 ): Promise<{ composioApiKey: string | null; enableRedis: boolean }> {
   let composioApiKey: string | null = null;
-  if (args.existingEnvKeys.has("COMPOSIO_API_KEY")) {
+  if (
+    args.existingEnvKeys.has("COMPOSIO_API_KEY") &&
+    args.existingComposioKeyValid
+  ) {
     log.info("COMPOSIO_API_KEY already set on the project — reusing.");
   } else {
+    if (args.existingEnvKeys.has("COMPOSIO_API_KEY")) {
+      log.warn(
+        "Existing COMPOSIO_API_KEY on the project doesn't look like a valid Composio key — re-entering.",
+      );
+    }
     note(
       `Opening Composio — sign in (free), then copy your API key from the page.`,
       "Composio",
@@ -50,13 +68,21 @@ export async function gatherRemainingInputs(
     await open(COMPOSIO_DASHBOARD_URL).catch(() => {
       // Headless env — the URL was printed above for manual copy.
     });
-    composioApiKey = ensure(
+    const raw = ensure(
       await password({
         message: "Composio API key",
-        validate: (v) =>
-          v && v.length > 10 ? undefined : "Looks too short — should start with 'comp_'",
+        validate: (v) => {
+          const trimmed = (v ?? "").trim();
+          if (!trimmed) return "Required";
+          if (!trimmed.startsWith("comp_"))
+            return "Composio keys start with 'comp_'";
+          if (!COMPOSIO_KEY_RE.test(trimmed))
+            return "Key looks malformed — copy directly from dashboard.composio.dev";
+          return undefined;
+        },
       }),
     );
+    composioApiKey = raw.trim();
   }
 
   let enableRedis: boolean;

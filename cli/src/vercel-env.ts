@@ -29,6 +29,39 @@ export async function listProjectEnvKeys(
 }
 
 /**
+ * Fetch the decrypted value of a single env var by key.
+ * Returns null if the key doesn't exist on the project.
+ *
+ * The list endpoint's `?decrypt=true` doesn't actually decrypt values for
+ * marketplace-managed env vars — they come back as encrypted JSON blobs.
+ * The per-id endpoint /v1/projects/{id}/env/{envId} returns the real value.
+ */
+export async function fetchProjectEnvValue(
+  args: ProjectEnvLookupArgs,
+  key: string,
+): Promise<string | null> {
+  const listUrl = args.teamId
+    ? `https://api.vercel.com/v10/projects/${args.projectId}/env?teamId=${args.teamId}`
+    : `https://api.vercel.com/v10/projects/${args.projectId}/env`;
+  const listRes = await fetch(listUrl, {
+    headers: { Authorization: `Bearer ${args.token}` },
+  });
+  if (!listRes.ok) return null;
+  const list = (await listRes.json()) as { envs: VercelEnvVar[] };
+  const match = list.envs.find((e) => e.key === key);
+  if (!match) return null;
+  const detailUrl = args.teamId
+    ? `https://api.vercel.com/v1/projects/${args.projectId}/env/${match.id}?teamId=${args.teamId}`
+    : `https://api.vercel.com/v1/projects/${args.projectId}/env/${match.id}`;
+  const detailRes = await fetch(detailUrl, {
+    headers: { Authorization: `Bearer ${args.token}` },
+  });
+  if (!detailRes.ok) return null;
+  const data = (await detailRes.json()) as { value?: string };
+  return data.value ?? null;
+}
+
+/**
  * Look up a project by name to see if it already exists.
  * Returns the project id if found, null otherwise.
  */
