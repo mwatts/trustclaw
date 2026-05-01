@@ -32,9 +32,9 @@ export async function askProjectName(): Promise<string> {
   );
 }
 
-// Composio keys are alphanumeric (with underscores/dashes) and start with `comp_`.
+// Composio keys are alphanumeric (with underscores/dashes) and start with `ak_`.
 // Reject anything else — we've seen UI text get pasted into the prompt by accident.
-const COMPOSIO_KEY_RE = /^comp_[A-Za-z0-9_-]{10,}$/;
+const COMPOSIO_KEY_RE = /^ak_[A-Za-z0-9_-]{10,}$/;
 
 export function isValidComposioKey(value: string | null | undefined): boolean {
   if (!value) return false;
@@ -74,8 +74,8 @@ export async function gatherRemainingInputs(
         validate: (v) => {
           const trimmed = (v ?? "").trim();
           if (!trimmed) return "Required";
-          if (!trimmed.startsWith("comp_"))
-            return "Composio keys start with 'comp_'";
+          if (!trimmed.startsWith("ak_"))
+            return "Composio keys start with 'ak_'";
           if (!COMPOSIO_KEY_RE.test(trimmed))
             return "Key looks malformed — copy directly from dashboard.composio.dev";
           return undefined;
