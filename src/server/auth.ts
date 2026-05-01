@@ -43,9 +43,11 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.NEXT_PUBLIC_APP_URL,
   trustedOrigins: [
-    "https://trustclaw.app",
-    "https://www.trustclaw.app",
-    ...(env.NODE_ENV === "development" ? [env.NEXT_PUBLIC_APP_URL] : []),
+    env.NEXT_PUBLIC_APP_URL,
+    ...(process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`]
+      : []),
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
   ],
   database: prismaAdapter(db, { provider: "postgresql" }),
   emailAndPassword: {

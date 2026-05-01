@@ -10,6 +10,7 @@ const exec = promisify(_exec);
 export interface AuthResult {
   vercelToken: string;
   vercelTeamId: string | null;
+  vercelOwnerSlug: string;
   githubToken: string;
   githubUsername: string;
 }
@@ -74,14 +75,36 @@ export async function detectAuth(): Promise<AuthResult> {
     s.stop("Vercel token invalid");
     throw new Error(`Vercel token invalid: ${userRes.status}`);
   }
-  const userData = (await userRes.json()) as { user: { email: string; defaultTeamId?: string } };
+  const userData = (await userRes.json()) as {
+    user: { email: string; username: string; defaultTeamId?: string };
+  };
+
+  const teamId = userData.user.defaultTeamId ?? null;
+
+  // The dashboard URL is scoped by team slug (or username for personal accounts).
+  // Personal/Hobby accounts have a default team like "<username>-projects".
+  let ownerSlug = userData.user.username;
+  if (teamId) {
+    try {
+      const teamRes = await fetch(`https://api.vercel.com/v2/teams/${teamId}`, {
+        headers: { Authorization: `Bearer ${vercelToken}` },
+      });
+      if (teamRes.ok) {
+        const teamData = (await teamRes.json()) as { slug?: string };
+        if (teamData.slug) ownerSlug = teamData.slug;
+      }
+    } catch {
+      // fall back to username
+    }
+  }
 
   s.stop(`Authenticated as ${userData.user.email}`);
   log.success(`GitHub: ${githubUsername}`);
 
   return {
     vercelToken,
-    vercelTeamId: userData.user.defaultTeamId ?? null,
+    vercelTeamId: teamId,
+    vercelOwnerSlug: ownerSlug,
     githubToken,
     githubUsername,
   };

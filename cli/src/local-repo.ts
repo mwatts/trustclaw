@@ -1,0 +1,154 @@
+import { exec as _exec } from "child_process";
+import { promisify } from "util";
+import { readFile } from "fs/promises";
+import { join } from "path";
+import { spinner, log, confirm, isCancel, cancel, text } from "@clack/prompts";
+
+const exec = promisify(_exec);
+
+export interface LocalRepoInfo {
+  rootDir: string;
+  currentBranch: string;
+  hasUncommittedChanges: boolean;
+}
+
+export async function detectLocalRepo(): Promise<LocalRepoInfo | null> {
+  try {
+    const { stdout: rootRaw } = await exec("git rev-parse --show-toplevel");
+    const rootDir = rootRaw.trim();
+    if (!rootDir) return null;
+
+    const pkgRaw = await readFile(join(rootDir, "package.json"), "utf-8");
+    const pkg = JSON.parse(pkgRaw) as { name?: string };
+    if (pkg.name !== "trustclaw") return null;
+
+    const { stdout: branchRaw } = await exec("git rev-parse --abbrev-ref HEAD", {
+      cwd: rootDir,
+    });
+    const currentBranch = branchRaw.trim();
+
+    const { stdout: statusRaw } = await exec("git status --porcelain", {
+      cwd: rootDir,
+    });
+    const hasUncommittedChanges = statusRaw.trim().length > 0;
+
+    return { rootDir, currentBranch, hasUncommittedChanges };
+  } catch {
+    return null;
+  }
+}
+
+interface PublishArgs {
+  token: string;
+  username: string;
+  repoName: string;
+  rootDir: string;
+  currentBranch: string;
+}
+
+export async function publishLocalCopy(args: PublishArgs): Promise<{ repo: string }> {
+  const { token, username, repoName, rootDir, currentBranch } = args;
+  const targetRepo = `${username}/${repoName}`;
+  const s = spinner();
+
+  s.start(`Checking GitHub for ${targetRepo}`);
+  const checkRes = await fetch(`https://api.github.com/repos/${targetRepo}`, {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
+  });
+
+  if (checkRes.ok) {
+    s.stop(`Repo already exists on GitHub: ${targetRepo}`);
+    throw new Error(
+      `A GitHub repo named "${repoName}" already exists on your account. ` +
+        `Pick a different name or delete the existing repo first.`,
+    );
+  }
+
+  s.message(`Creating private GitHub repo ${targetRepo}`);
+  const createRes = await fetch("https://api.github.com/user/repos", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: repoName,
+      private: true,
+      auto_init: false,
+      description: "Self-hosted trustclaw deployment",
+    }),
+  });
+
+  if (!createRes.ok) {
+    const body = await createRes.text();
+    s.stop("GitHub repo creation failed");
+    throw new Error(`Failed to create repo: ${createRes.status} ${body}`);
+  }
+
+  s.message(`Pushing local ${currentBranch} → ${targetRepo}:main`);
+  const remoteUrl = `https://x-access-token:${token}@github.com/${targetRepo}.git`;
+  // Use a temp remote name to avoid clobbering the user's existing remotes.
+  const remoteName = `trustclaw-deploy-${Date.now()}`;
+
+  try {
+    await exec(`git remote add ${remoteName} ${remoteUrl}`, { cwd: rootDir });
+    await exec(`git push ${remoteName} ${currentBranch}:main`, { cwd: rootDir });
+  } finally {
+    // Always clean up the temp remote, even on push failure.
+    await exec(`git remote remove ${remoteName}`, { cwd: rootDir }).catch(() => {});
+  }
+
+  s.stop(`Pushed to ${targetRepo}`);
+  return { repo: targetRepo };
+}
+
+export async function confirmLocalPublish(info: LocalRepoInfo): Promise<{
+  repoName: string;
+} | null> {
+  log.info(
+    `Detected local trustclaw checkout at ${info.rootDir} (branch: ${info.currentBranch})`,
+  );
+
+  if (info.hasUncommittedChanges) {
+    log.warn(
+      "You have uncommitted changes — only committed code will be pushed. " +
+        "Commit first if you want them included.",
+    );
+    const proceed = await confirm({
+      message: "Continue anyway?",
+      initialValue: false,
+    });
+    if (isCancel(proceed) || !proceed) {
+      cancel("Cancelled.");
+      return null;
+    }
+  }
+
+  const usePublish = await confirm({
+    message: "Publish this local copy to a new private GitHub repo and deploy that?",
+    initialValue: true,
+  });
+  if (isCancel(usePublish)) {
+    cancel("Cancelled.");
+    return null;
+  }
+  if (!usePublish) {
+    return null;
+  }
+
+  const repoName = await text({
+    message: "GitHub repo name (will be created as private under your account)",
+    initialValue: "trustclaw",
+    validate: (v) =>
+      v && /^[a-zA-Z0-9._-]+$/.test(v)
+        ? undefined
+        : "Letters, numbers, dots, dashes, underscores only",
+  });
+  if (isCancel(repoName)) {
+    cancel("Cancelled.");
+    return null;
+  }
+
+  return { repoName };
+}

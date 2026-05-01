@@ -16,7 +16,7 @@ When you need to look up documentation for any of these libraries, use the **Con
 
 ## Architecture
 
-This dashboard uses a **single tRPC backend** running within Next.js. Auth is handled by Better Auth with username/password. Composio functionality is accessed server-side using a global API key. All LLM and embedding calls route through **Vercel AI Gateway** via plain string model IDs (e.g., `'anthropic/claude-sonnet-4-6'`). Auth uses `VERCEL_OIDC_TOKEN` on Vercel deployments, or `AI_GATEWAY_API_KEY` for local dev.
+This dashboard uses a **single tRPC backend** running within Next.js. Auth is handled by Better Auth with username/password. Composio functionality is accessed server-side using a global API key. All LLM and embedding calls route through **Vercel AI Gateway** via plain string model IDs (e.g., `'claude-sonnet-4-5-20250929'`). Auth uses `VERCEL_OIDC_TOKEN` on Vercel deployments, or `AI_GATEWAY_API_KEY` for local dev.
 
 ### tRPC (Backend)
 
@@ -528,7 +528,6 @@ Some features use external SDKs directly. These clients live in `src/server/clie
 src/server/clients/
 ├── composio.ts   # Composio SDK (@composio/core) — uses global COMPOSIO_API_KEY from env
 ├── telegram.ts   # Telegram Bot API helper
-├── ai-gateway.ts # Vercel AI Gateway client — LLM and embedding calls via plain model IDs
 ├── redis.ts      # Redis client (resumable streams, streaming state, abort flags)
 └── db.ts         # Prisma client
 ```

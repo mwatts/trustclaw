@@ -2,6 +2,11 @@ import { intro, outro, note, cancel } from "@clack/prompts";
 import { detectAuth } from "./auth.js";
 import { gatherInputs } from "./inputs.js";
 import { forkRepo } from "./github.js";
+import {
+  detectLocalRepo,
+  confirmLocalPublish,
+  publishLocalCopy,
+} from "./local-repo.js";
 import { createVercelProject } from "./vercel.js";
 import { provisionStores } from "./stores.js";
 import { setEnvVars } from "./env-vars.js";
@@ -17,7 +22,24 @@ export async function deploy(): Promise<void> {
     const auth = await detectAuth();
     const inputs = await gatherInputs(auth.githubUsername);
 
-    const { repo } = await forkRepo(auth.githubToken, auth.githubUsername);
+    const localRepo = await detectLocalRepo();
+    let repo: string;
+    if (localRepo) {
+      const choice = await confirmLocalPublish(localRepo);
+      if (choice) {
+        ({ repo } = await publishLocalCopy({
+          token: auth.githubToken,
+          username: auth.githubUsername,
+          repoName: choice.repoName,
+          rootDir: localRepo.rootDir,
+          currentBranch: localRepo.currentBranch,
+        }));
+      } else {
+        ({ repo } = await forkRepo(auth.githubToken, auth.githubUsername));
+      }
+    } else {
+      ({ repo } = await forkRepo(auth.githubToken, auth.githubUsername));
+    }
 
     const project = await createVercelProject({
       token: auth.vercelToken,
@@ -31,6 +53,8 @@ export async function deploy(): Promise<void> {
       token: auth.vercelToken,
       teamId: auth.vercelTeamId,
       projectId: project.id,
+      projectName: project.name,
+      ownerSlug: auth.vercelOwnerSlug,
       enableRedis: inputs.enableRedis,
     });
 

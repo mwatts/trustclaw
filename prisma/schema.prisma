@@ -34,7 +34,6 @@ model User {
   emailVerified   Boolean                @default(false)
   image           String?
   timezone        String                 @default("UTC")
-  isDeveloper     Boolean                @default(false)
   username        String?                @unique
   displayUsername String?
   createdAt       DateTime               @default(now())
@@ -101,7 +100,7 @@ model ComposioClawInstance {
   userId String @unique
 
   // Anthropic config
-  anthropicModel String @default("anthropic/claude-sonnet-4.6")
+  anthropicModel String @default("claude-sonnet-4-5-20250929")
 
   // Telegram linking
   telegramChatId             String?   @unique
@@ -195,7 +194,7 @@ model OnboardingState {
   personality    String?
   emoji          String?
   lore           String   @default("") @db.Text
-  anthropicModel String   @default("anthropic/claude-sonnet-4.6")
+  anthropicModel String   @default("claude-sonnet-4-5-20250929")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
