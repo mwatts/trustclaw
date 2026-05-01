@@ -1,4 +1,4 @@
-import { spinner } from "@clack/prompts";
+import { spinner, confirm, isCancel, cancel } from "@clack/prompts";
 
 const VERCEL_API = "https://api.vercel.com";
 
@@ -15,6 +15,10 @@ interface VercelProject {
   name: string;
 }
 
+interface VercelProjectFull extends VercelProject {
+  link?: { type?: string; repo?: string; org?: string };
+}
+
 async function getRepoId(githubToken: string, slug: string): Promise<number> {
   const res = await fetch(`https://api.github.com/repos/${slug}`, {
     headers: { Authorization: `Bearer ${githubToken}`, Accept: "application/vnd.github+json" },
@@ -24,11 +28,25 @@ async function getRepoId(githubToken: string, slug: string): Promise<number> {
   return data.id;
 }
 
+async function getExistingProject(
+  token: string,
+  teamId: string | null,
+  projectName: string,
+): Promise<VercelProjectFull | null> {
+  const url = teamId
+    ? `${VERCEL_API}/v9/projects/${projectName}?teamId=${teamId}`
+    : `${VERCEL_API}/v9/projects/${projectName}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+  return (await res.json()) as VercelProjectFull;
+}
+
 export async function createVercelProject(args: CreateProjectArgs): Promise<VercelProject> {
   const { token, teamId, projectName, githubRepoSlug, githubToken } = args;
 
   const s = spinner();
-  s.start(`Creating Vercel project "${projectName}"`);
+  s.start(`Checking for existing Vercel project "${projectName}"`);
 
   try {
     void (await getRepoId(githubToken, githubRepoSlug)); // sanity check the repo is accessible
@@ -37,6 +55,46 @@ export async function createVercelProject(args: CreateProjectArgs): Promise<Verc
     throw err;
   }
 
+  const existing = await getExistingProject(token, teamId, projectName);
+  if (existing) {
+    const linkedRepo =
+      existing.link?.org && existing.link?.repo
+        ? `${existing.link.org}/${existing.link.repo}`
+        : null;
+
+    if (linkedRepo === githubRepoSlug) {
+      s.stop(`Reusing existing project: ${existing.name} (linked to ${linkedRepo})`);
+      return { id: existing.id, name: existing.name };
+    }
+
+    s.stop(`Project "${projectName}" exists but is linked to ${linkedRepo ?? "a different repo"}`);
+    const reuse = await confirm({
+      message: `Reuse it anyway and re-link to ${githubRepoSlug}?`,
+      initialValue: false,
+    });
+    if (isCancel(reuse) || !reuse) {
+      cancel("Cancelled.");
+      throw new Error(
+        `Pick a different project name, or delete "${projectName}" on Vercel first.`,
+      );
+    }
+    // Re-link the existing project to the new GitHub repo.
+    const linkUrl = teamId
+      ? `${VERCEL_API}/v9/projects/${existing.id}/link?teamId=${teamId}`
+      : `${VERCEL_API}/v9/projects/${existing.id}/link`;
+    const linkRes = await fetch(linkUrl, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "github", repo: githubRepoSlug }),
+    });
+    if (!linkRes.ok) {
+      const body = await linkRes.text();
+      throw new Error(`Failed to re-link project: ${linkRes.status} ${body}`);
+    }
+    return { id: existing.id, name: existing.name };
+  }
+
+  s.message(`Creating Vercel project "${projectName}"`);
   const url = teamId
     ? `${VERCEL_API}/v9/projects?teamId=${teamId}`
     : `${VERCEL_API}/v9/projects`;

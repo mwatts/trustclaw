@@ -94,7 +94,17 @@ async function pollForEnvVar(
 
 async function provisionPostgres(args: ProvisionArgs): Promise<string> {
   const s = spinner();
-  s.start("Provisioning Neon Postgres via Vercel Marketplace");
+  s.start("Checking project for an existing Postgres connection");
+  const existing = await fetchProjectEnvVar(
+    args,
+    ["DATABASE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"],
+    ["postgres://", "postgresql://"],
+  );
+  if (existing) {
+    s.stop("Postgres already connected — reusing existing DATABASE_URL");
+    return existing;
+  }
+  s.message("Provisioning Neon Postgres via Vercel Marketplace");
 
   const url = args.teamId
     ? `https://api.vercel.com/v1/storage/stores?teamId=${args.teamId}`
@@ -141,7 +151,17 @@ async function provisionPostgres(args: ProvisionArgs): Promise<string> {
 
 async function provisionRedis(args: ProvisionArgs): Promise<string> {
   const s = spinner();
-  s.start("Provisioning Upstash Redis via Vercel Marketplace");
+  s.start("Checking project for an existing Redis connection");
+  const existing = await fetchProjectEnvVar(
+    args,
+    ["REDIS_URL", "KV_URL"],
+    ["redis://", "rediss://"],
+  );
+  if (existing) {
+    s.stop("Redis already connected — reusing existing REDIS_URL");
+    return existing;
+  }
+  s.message("Provisioning Upstash Redis via Vercel Marketplace");
 
   const url = args.teamId
     ? `https://api.vercel.com/v1/storage/stores?teamId=${args.teamId}`

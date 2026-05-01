@@ -38,8 +38,8 @@ export async function setEnvVars(args: SetEnvArgs): Promise<{ betterAuthSecret: 
 
   for (const spec of vars) {
     const url = args.teamId
-      ? `https://api.vercel.com/v10/projects/${args.projectId}/env?teamId=${args.teamId}`
-      : `https://api.vercel.com/v10/projects/${args.projectId}/env`;
+      ? `https://api.vercel.com/v10/projects/${args.projectId}/env?teamId=${args.teamId}&upsert=true`
+      : `https://api.vercel.com/v10/projects/${args.projectId}/env?upsert=true`;
 
     const res = await fetch(url, {
       method: "POST",

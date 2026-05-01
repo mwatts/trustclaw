@@ -55,45 +55,58 @@ export async function publishLocalCopy(args: PublishArgs): Promise<{ repo: strin
   const checkRes = await fetch(`https://api.github.com/repos/${targetRepo}`, {
     headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
   });
+  const repoExists = checkRes.ok;
 
-  if (checkRes.ok) {
-    s.stop(`Repo already exists on GitHub: ${targetRepo}`);
-    throw new Error(
-      `A GitHub repo named "${repoName}" already exists on your account. ` +
-        `Pick a different name or delete the existing repo first.`,
-    );
-  }
+  let forceOverwrite = false;
+  if (repoExists) {
+    s.stop(`Repo already exists: ${targetRepo}`);
+    const overwrite = await confirm({
+      message: `Force-push local "${currentBranch}" over ${targetRepo}:main? (overwrites remote history)`,
+      initialValue: false,
+    });
+    if (isCancel(overwrite) || !overwrite) {
+      cancel("Cancelled.");
+      throw new Error(
+        `Pick a different repo name or delete ${targetRepo} on GitHub, then retry.`,
+      );
+    }
+    forceOverwrite = true;
+    s.start(`Force-pushing to ${targetRepo}`);
+  } else {
+    s.message(`Creating private GitHub repo ${targetRepo}`);
+    const createRes = await fetch("https://api.github.com/user/repos", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: repoName,
+        private: true,
+        auto_init: false,
+        description: "Self-hosted trustclaw deployment",
+      }),
+    });
 
-  s.message(`Creating private GitHub repo ${targetRepo}`);
-  const createRes = await fetch("https://api.github.com/user/repos", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      name: repoName,
-      private: true,
-      auto_init: false,
-      description: "Self-hosted trustclaw deployment",
-    }),
-  });
-
-  if (!createRes.ok) {
-    const body = await createRes.text();
-    s.stop("GitHub repo creation failed");
-    throw new Error(`Failed to create repo: ${createRes.status} ${body}`);
+    if (!createRes.ok) {
+      const body = await createRes.text();
+      s.stop("GitHub repo creation failed");
+      throw new Error(`Failed to create repo: ${createRes.status} ${body}`);
+    }
   }
 
   s.message(`Pushing local ${currentBranch} → ${targetRepo}:main`);
   const remoteUrl = `https://x-access-token:${token}@github.com/${targetRepo}.git`;
   // Use a temp remote name to avoid clobbering the user's existing remotes.
   const remoteName = `trustclaw-deploy-${Date.now()}`;
+  const pushFlag = forceOverwrite ? "--force" : "";
 
   try {
     await exec(`git remote add ${remoteName} ${remoteUrl}`, { cwd: rootDir });
-    await exec(`git push ${remoteName} ${currentBranch}:main`, { cwd: rootDir });
+    await exec(`git push ${pushFlag} ${remoteName} ${currentBranch}:main`, {
+      cwd: rootDir,
+    });
   } finally {
     // Always clean up the temp remote, even on push failure.
     await exec(`git remote remove ${remoteName}`, { cwd: rootDir }).catch(() => {});

@@ -2,7 +2,7 @@ import { text, password, confirm, isCancel, cancel, note } from "@clack/prompts"
 import open from "open";
 
 const COMPOSIO_DASHBOARD_URL =
-  "https://dashboard.composio.dev/login?flow=developer";
+  "https://dashboard.composio.dev/login?next=%2F~%2Fproject%2Fsettings%2Fapi-keys&flow=developer";
 
 export interface UserInputs {
   composioApiKey: string;
@@ -31,7 +31,7 @@ export async function gatherInputs(githubUsername: string): Promise<UserInputs> 
   );
 
   note(
-    `Opening ${COMPOSIO_DASHBOARD_URL} — sign in (free), then grab your API key from Settings → API keys.`,
+    `Opening Composio — sign in (free), then copy your API key from the page.`,
     "Composio",
   );
   await open(COMPOSIO_DASHBOARD_URL).catch(() => {
