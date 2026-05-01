@@ -97,7 +97,9 @@ export async function deploy(): Promise<void> {
       githubRepoSlug: repo,
     });
 
-    note(`https://${result.url}`, "Deployment URL");
+    // Print outside the clack box so the URL doesn't wrap across lines and
+    // stays copy-friendly.
+    console.log(`\n  Deployment URL: https://${result.url}\n`);
 
     await maybeSetupTelegram({
       vercelToken: auth.vercelToken,

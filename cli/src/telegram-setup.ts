@@ -136,7 +136,8 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
     projectId: args.projectId,
     githubRepoSlug: args.githubRepoSlug,
   });
-  log.success(`Redeploy queued: https://${redeployed.url}`);
+  // Print outside the clack box so the URL stays on one copyable line.
+  console.log(`\n  Redeploy URL: https://${redeployed.url}\n`);
 
   return true;
 }
