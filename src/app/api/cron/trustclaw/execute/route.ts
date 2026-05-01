@@ -115,7 +115,7 @@ async function executeJobs(
   }
 }
 
-export const maxDuration = 800;
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const userAgent = request.headers.get("user-agent") ?? "";
