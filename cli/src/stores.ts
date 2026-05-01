@@ -19,9 +19,28 @@ interface ConnectionStrings {
 }
 
 interface VercelEnvVar {
+  id: string;
   key: string;
   value: string;
   target: string[];
+}
+
+async function fetchSingleEnvValue(
+  args: ProvisionArgs,
+  envId: string,
+): Promise<string | null> {
+  // The list endpoint's `?decrypt=true` doesn't actually return decrypted values
+  // for marketplace-managed env vars (they come back as encrypted JSON blobs).
+  // The single-env endpoint returns the real value.
+  const url = args.teamId
+    ? `https://api.vercel.com/v1/projects/${args.projectId}/env/${envId}?teamId=${args.teamId}`
+    : `https://api.vercel.com/v1/projects/${args.projectId}/env/${envId}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${args.token}` },
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { value?: string };
+  return data.value ?? null;
 }
 
 async function fetchProjectEnvVar(
@@ -29,11 +48,11 @@ async function fetchProjectEnvVar(
   candidateKeys: string[],
   prefixes: string[],
 ): Promise<string | null> {
-  const url = args.teamId
-    ? `https://api.vercel.com/v10/projects/${args.projectId}/env?decrypt=true&teamId=${args.teamId}`
-    : `https://api.vercel.com/v10/projects/${args.projectId}/env?decrypt=true`;
+  const listUrl = args.teamId
+    ? `https://api.vercel.com/v10/projects/${args.projectId}/env?teamId=${args.teamId}`
+    : `https://api.vercel.com/v10/projects/${args.projectId}/env`;
 
-  const res = await fetch(url, {
+  const res = await fetch(listUrl, {
     headers: { Authorization: `Bearer ${args.token}` },
   });
   if (!res.ok) return null;
@@ -41,10 +60,12 @@ async function fetchProjectEnvVar(
   const data = (await res.json()) as { envs: VercelEnvVar[] };
 
   for (const key of candidateKeys) {
-    const match = data.envs.find(
-      (e) => e.key === key && prefixes.some((p) => e.value?.startsWith(p)),
-    );
-    if (match?.value) return match.value;
+    const match = data.envs.find((e) => e.key === key);
+    if (!match) continue;
+    const value = await fetchSingleEnvValue(args, match.id);
+    if (value && prefixes.some((p) => value.startsWith(p))) {
+      return value;
+    }
   }
   return null;
 }
