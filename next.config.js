@@ -37,9 +37,29 @@ const config = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
           },
-          // Content-Security-Policy is set per-request in src/middleware.ts so
-          // it can include a fresh nonce that replaces the need for
-          // 'unsafe-inline' on scripts.
+          ...(process.env.NODE_ENV === "production"
+            ? [
+                {
+                  key: "Content-Security-Policy",
+                  value: [
+                    "default-src 'self'",
+                    // 'unsafe-inline' is here because Next.js streams inline
+                    // hydration scripts. A nonce-based CSP is the proper fix
+                    // but our prior attempt broke hydration; revisit later.
+                    "script-src 'self' 'unsafe-inline'",
+                    "style-src 'self' 'unsafe-inline'",
+                    "img-src 'self' data: https:",
+                    "font-src 'self' data:",
+                    "connect-src 'self' *.composio.dev",
+                    "frame-ancestors 'none'",
+                    "object-src 'none'",
+                    "base-uri 'self'",
+                    "form-action 'self'",
+                    "upgrade-insecure-requests",
+                  ].join("; "),
+                },
+              ]
+            : []),
         ],
       },
     ];
