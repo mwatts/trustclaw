@@ -33,25 +33,13 @@ const config = {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains; preload",
           },
-          ...(process.env.NODE_ENV === "production"
-            ? [
-                {
-                  key: "Content-Security-Policy",
-                  value: [
-                    "default-src 'self'",
-                    "script-src 'self' 'unsafe-inline' *.googletagmanager.com",
-                    "style-src 'self' 'unsafe-inline'",
-                    "img-src 'self' data: https:",
-                    "font-src 'self' data:",
-                    "connect-src 'self' *.composio.dev wss://localhost:*",
-                    "frame-ancestors 'none'",
-                    "object-src 'none'",
-                    "base-uri 'self'",
-                    "form-action 'self'",
-                  ].join("; "),
-                },
-              ]
-            : []),
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+          },
+          // Content-Security-Policy is set per-request in src/middleware.ts so
+          // it can include a fresh nonce that replaces the need for
+          // 'unsafe-inline' on scripts.
         ],
       },
     ];

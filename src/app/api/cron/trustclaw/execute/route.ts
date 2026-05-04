@@ -1,6 +1,7 @@
 import { after, NextResponse } from "next/server";
 import { Prisma } from "~/generated/prisma/client";
 import { z } from "zod";
+import { env } from "~/env";
 import { db } from "~/server/clients/db";
 import { prepareAgentRun } from "~/server/api/routers/trustclaw/agent/setup";
 import { computeNextRunSafe } from "~/server/api/routers/trustclaw/agent/tools/cron-utils";
@@ -118,9 +119,14 @@ async function executeJobs(
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
-  const userAgent = request.headers.get("user-agent") ?? "";
-  if (!userAgent.startsWith("vercel-cron")) {
-    return new Response("Unauthorized", { status: 401 });
+  // Bearer-auth via CRON_SECRET (auto-injected by Vercel for cron-triggered
+  // routes; the dispatcher /api/cron/trustclaw forwards it on internal fetch).
+  // Dev mode allows unauthenticated calls so the local trigger script works.
+  if (env.NODE_ENV !== "development") {
+    const auth = request.headers.get("authorization") ?? "";
+    if (!env.CRON_SECRET || auth !== `Bearer ${env.CRON_SECRET}`) {
+      return new Response("Unauthorized", { status: 401 });
+    }
   }
 
   const body: unknown = await request.json();

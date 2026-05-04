@@ -9,6 +9,8 @@ interface SetEnvArgs {
   composioApiKey: string | null;
   // true when BETTER_AUTH_SECRET is already on the project — skip generating a new one.
   hasBetterAuthSecret: boolean;
+  // true when CRON_SECRET is already on the project — skip generating a new one.
+  hasCronSecret: boolean;
 }
 
 interface EnvVarSpec {
@@ -25,6 +27,15 @@ export async function setEnvVars(args: SetEnvArgs): Promise<void> {
     vars.push({
       key: "BETTER_AUTH_SECRET",
       value: crypto.randomBytes(32).toString("base64"),
+      target: ["production", "preview", "development"],
+      type: "encrypted",
+    });
+  }
+
+  if (!args.hasCronSecret) {
+    vars.push({
+      key: "CRON_SECRET",
+      value: crypto.randomBytes(32).toString("base64url"),
       target: ["production", "preview", "development"],
       type: "encrypted",
     });

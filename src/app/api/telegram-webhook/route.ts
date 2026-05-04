@@ -193,8 +193,6 @@ async function handleRegularMessage(
           return;
         }
 
-        // eslint-disable-next-line no-console
-        console.log(step);
         // Send tool call descriptions (with results for connection URLs)
         for (let i = 0; i < step.toolCalls.length; i++) {
           const tc = step.toolCalls[i]!;

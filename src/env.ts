@@ -26,6 +26,10 @@ export const env = createEnv({
 
     // Composio Twitter toolkit auth config (optional — twitter toolkit omitted when missing)
     TWITTER_AUTH_CONFIG: z.string().optional(),
+
+    // Cron auth — Vercel auto-injects this when crons are configured in vercel.json.
+    // Optional in dev so local cron triggers don't require it.
+    CRON_SECRET: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url(),
@@ -41,6 +45,7 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     REDIS_URL: process.env.REDIS_URL,
     TWITTER_AUTH_CONFIG: process.env.TWITTER_AUTH_CONFIG,
+    CRON_SECRET: process.env.CRON_SECRET,
 
     // Client URL resolution:
     //  - dev: derive from PORT so `PORT=3001 pnpm dev` just works

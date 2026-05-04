@@ -43,7 +43,7 @@ export async function sendTelegramMessage(
     const body = await plainResponse.text().catch(() => "(no body)");
     console.error(
       `[telegram] sendMessage failed: ${plainResponse.status}`,
-      { chatId, textLength: text.length, textPreview: text.slice(0, 200), body },
+      { chatId, textLength: text.length, body },
     );
     throw new Error(`Telegram sendMessage failed: ${plainResponse.status} — ${body}`);
   }

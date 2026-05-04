@@ -32,9 +32,14 @@ function parseNowOverride(request: Request): Date {
 }
 
 export async function GET(request: Request) {
-  const userAgent = request.headers.get("user-agent") ?? "";
-  if (env.NODE_ENV !== "development" && !userAgent.startsWith("vercel-cron")) {
-    return new Response("Unauthorized", { status: 401 });
+  // Vercel auto-injects CRON_SECRET when crons are declared in vercel.json and
+  // sends `Authorization: Bearer <CRON_SECRET>` on cron-triggered requests.
+  // In dev we allow unauthenticated calls so the local trigger script works.
+  if (env.NODE_ENV !== "development") {
+    const auth = request.headers.get("authorization") ?? "";
+    if (!env.CRON_SECRET || auth !== `Bearer ${env.CRON_SECRET}`) {
+      return new Response("Unauthorized", { status: 401 });
+    }
   }
 
   const now = parseNowOverride(request);
@@ -111,8 +116,12 @@ export async function GET(request: Request) {
       fetch(executeUrl, {
         method: "POST",
         headers: {
-          "user-agent": "vercel-cron/1.0",
           "Content-Type": "application/json",
+          // Forward CRON_SECRET so /execute can authenticate the inbound call
+          // (in dev there's no secret, the route allows unauth'd calls there).
+          ...(env.CRON_SECRET
+            ? { Authorization: `Bearer ${env.CRON_SECRET}` }
+            : {}),
         },
         body: JSON.stringify({
           jobIds,

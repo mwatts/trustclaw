@@ -131,6 +131,7 @@ export async function deploy(): Promise<void> {
       projectId: project.id,
       composioApiKey: remaining.composioApiKey,
       hasBetterAuthSecret: existingEnvKeys.has("BETTER_AUTH_SECRET"),
+      hasCronSecret: existingEnvKeys.has("CRON_SECRET"),
     });
 
     await runMigration(stores.databaseUrl);
