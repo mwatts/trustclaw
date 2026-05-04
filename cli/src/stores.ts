@@ -156,7 +156,8 @@ async function provisionPostgres(args: ProvisionArgs): Promise<string> {
       `  1. Click "Create Database"\n` +
       `  2. Pick "Neon" → Continue\n` +
       `  3. Continue\n` +
-      `  4. Click "Connect"\n` +
+      `  4. Check "Development" (and Preview) so DATABASE_URL is set in all envs\n` +
+      `  5. Click "Connect"\n` +
       `(The project is already selected since you're on its stores page.)`,
     "Set up Neon Postgres",
   );
@@ -213,7 +214,8 @@ async function provisionRedis(args: ProvisionArgs): Promise<string> {
       `  1. Click "Create Database"\n` +
       `  2. Pick "Redis" (Upstash)\n` +
       `  3. Walk through the creator steps → Click "Create"\n` +
-      `  4. Click "Connect"\n` +
+      `  4. Check "Development" (and Preview) so REDIS_URL is set in all envs\n` +
+      `  5. Click "Connect"\n` +
       `(The project is already selected since you're on its stores page.)`,
     "Set up Upstash Redis",
   );
