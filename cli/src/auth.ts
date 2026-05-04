@@ -1,11 +1,19 @@
-import { exec as _exec } from "child_process";
+import { exec as _exec, spawn } from "child_process";
 import { promisify } from "util";
 import { readFile } from "fs/promises";
 import { homedir } from "os";
 import { join } from "path";
-import { log, spinner } from "@clack/prompts";
+import { confirm, isCancel, log, spinner } from "@clack/prompts";
 
 const exec = promisify(_exec);
+
+async function runInteractive(cmd: string, args: string[]): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { stdio: "inherit" });
+    child.on("error", reject);
+    child.on("exit", (code) => resolve(code ?? 1));
+  });
+}
 
 export interface AuthResult {
   vercelToken: string;
@@ -16,7 +24,7 @@ export interface AuthResult {
   githubUsername: string;
 }
 
-async function getVercelToken(): Promise<string> {
+async function readVercelTokenFromDisk(): Promise<string | null> {
   const home = homedir();
   const candidates =
     process.platform === "darwin"
@@ -38,8 +46,34 @@ async function getVercelToken(): Promise<string> {
       // try next candidate
     }
   }
+  return null;
+}
 
-  throw new Error("No Vercel auth found. Run: pnpm dlx vercel login");
+async function promptVercelLogin(reason: string): Promise<void> {
+  log.warn(reason);
+  const proceed = await confirm({
+    message: "Run `vercel login` now?",
+    initialValue: true,
+  });
+  if (isCancel(proceed) || !proceed) {
+    throw new Error("Cancelled. Run `pnpm dlx vercel login` and re-run cli:deploy.");
+  }
+  const code = await runInteractive("pnpm", ["dlx", "vercel", "login"]);
+  if (code !== 0) {
+    throw new Error(`vercel login exited with code ${code}.`);
+  }
+}
+
+async function getVercelToken(): Promise<string> {
+  let token = await readVercelTokenFromDisk();
+  if (!token) {
+    await promptVercelLogin("No Vercel auth found on this machine.");
+    token = await readVercelTokenFromDisk();
+    if (!token) {
+      throw new Error("Still no Vercel auth after login. Try again.");
+    }
+  }
+  return token;
 }
 
 async function getGitHubToken(): Promise<{ token: string; username: string }> {
@@ -69,9 +103,26 @@ export async function detectAuth(): Promise<AuthResult> {
     throw err;
   }
 
-  const userRes = await fetch("https://api.vercel.com/v2/user", {
+  // If the cached Vercel token is stale (revoked / expired), prompt to log
+  // in again and retry once with the fresh token.
+  let userRes = await fetch("https://api.vercel.com/v2/user", {
     headers: { Authorization: `Bearer ${vercelToken}` },
   });
+  if (userRes.status === 401 || userRes.status === 403) {
+    s.stop("Vercel token expired or invalid");
+    await promptVercelLogin(
+      `Vercel returned ${userRes.status} — your saved token is likely expired or revoked.`,
+    );
+    const refreshed = await readVercelTokenFromDisk();
+    if (!refreshed) {
+      throw new Error("No Vercel auth after login. Try again.");
+    }
+    vercelToken = refreshed;
+    s.start("Detecting authentication");
+    userRes = await fetch("https://api.vercel.com/v2/user", {
+      headers: { Authorization: `Bearer ${vercelToken}` },
+    });
+  }
   if (!userRes.ok) {
     s.stop("Vercel token invalid");
     throw new Error(`Vercel token invalid: ${userRes.status}`);
