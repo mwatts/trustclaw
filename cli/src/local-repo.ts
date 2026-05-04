@@ -141,6 +141,15 @@ export async function confirmLocalPublish(
     }
   }
 
+  // If we already have a cached repo name from a prior run, skip both the
+  // "Publish?" confirm and the name prompt — the user clearly opted into the
+  // publish flow before. Edit `.trustclaw-deploy.json` to change the repo
+  // name, or delete it to get the prompts back.
+  if (defaultRepoName) {
+    log.info(`Using cached GitHub repo: ${defaultRepoName}`);
+    return { repoName: defaultRepoName };
+  }
+
   const usePublish = await confirm({
     message: "Publish this local copy to a new private GitHub repo and deploy that?",
     initialValue: true,
@@ -155,7 +164,7 @@ export async function confirmLocalPublish(
 
   const repoName = await text({
     message: "GitHub repo name (will be created as private under your account)",
-    initialValue: defaultRepoName ?? "trustclaw",
+    initialValue: "trustclaw",
     validate: (v) =>
       v && /^[a-zA-Z0-9._-]+$/.test(v)
         ? undefined
