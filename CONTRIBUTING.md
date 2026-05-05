@@ -81,7 +81,7 @@ If your change touches the deploy flow (anything in `cli/`), please also test it
 
 ## Reporting bugs / requesting features
 
-Open an [issue](https://github.com/sarahsimionescu/trustclaw/issues). For bugs, include:
+Open an [issue](https://github.com/ComposioHQ/trustclaw/issues). For bugs, include:
 
 - What you expected to happen
 - What actually happened

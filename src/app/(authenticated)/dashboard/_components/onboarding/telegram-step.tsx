@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- infrastructure: telegram polling + clipboard state requires hooks
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Check, Copy, ExternalLink, Loader2, MessageSquare } from "lucide-react";

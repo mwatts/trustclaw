@@ -11,7 +11,7 @@ A 24/7 personal AI assistant with 1000+ tools via **OAuth** and **sandboxed exec
 ## ⚡ Deploy your own in seconds
 
 ```bash
-git clone https://github.com/sarahsimionescu/trustclaw && cd trustclaw
+git clone https://github.com/ComposioHQ/trustclaw && cd trustclaw
 pnpm install
 pnpm dlx trustclaw deploy
 ```

@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- controlled select state
 import { useState } from "react";
 import type { z } from "zod";
 import { Loader2 } from "lucide-react";

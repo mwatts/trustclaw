@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- core utility: fade-in on image load requires useState
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";

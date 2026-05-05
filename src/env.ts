@@ -27,9 +27,10 @@ export const env = createEnv({
     // Composio Twitter toolkit auth config (optional - twitter toolkit omitted when missing)
     TWITTER_AUTH_CONFIG: z.string().optional(),
 
-    // Cron auth - Vercel auto-injects this when crons are configured in vercel.json.
-    // Optional in dev so local cron triggers don't require it.
-    CRON_SECRET: z.string().optional(),
+    // Cron auth. Required in production so unauthenticated callers can't hit
+    // /api/cron/* endpoints. Vercel auto-injects this when crons are configured
+    // in vercel.json; the trustclaw deploy CLI also generates one on first deploy.
+    CRON_SECRET: z.string(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url(),

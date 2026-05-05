@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- controlled confirmation input state
 import { useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";

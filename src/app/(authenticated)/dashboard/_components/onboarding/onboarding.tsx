@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- wizard step routing requires useState
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2 } from "lucide-react";

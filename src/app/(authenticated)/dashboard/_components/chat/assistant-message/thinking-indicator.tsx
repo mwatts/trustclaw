@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- infrastructure: thinking indicator cycling requires hooks
 import { useState, useEffect } from "react";
 import { THINKING_WORDS } from "./thinking-words";
 

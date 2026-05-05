@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- IntersectionObserver requires useEffect/useState
 import { useRef, useEffect, useState, type ReactNode } from "react";
 
 interface AnimateOnViewProps {

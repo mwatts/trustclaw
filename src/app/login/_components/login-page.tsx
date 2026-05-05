@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- local UI state for auth submit pending and form fields
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TrustClawBrand } from "~/app/_components/trustclaw-brand";

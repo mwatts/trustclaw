@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- infrastructure: collapsible state requires hooks
 import { useState } from "react";
 import { cn } from "~/lib/utils";
 import {

@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- infrastructure: clipboard state requires hooks
 import { useState, useRef, useEffect } from "react";
 import { Copy, Check } from "lucide-react";
 import type { UIMessage } from "@ai-sdk/react";

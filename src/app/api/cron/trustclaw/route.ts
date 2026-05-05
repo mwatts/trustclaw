@@ -37,7 +37,7 @@ export async function GET(request: Request) {
   // In dev we allow unauthenticated calls so the local trigger script works.
   if (env.NODE_ENV !== "development") {
     const auth = request.headers.get("authorization") ?? "";
-    if (!env.CRON_SECRET || auth !== `Bearer ${env.CRON_SECRET}`) {
+    if (auth !== `Bearer ${env.CRON_SECRET}`) {
       return new Response("Unauthorized", { status: 401 });
     }
   }
@@ -117,11 +117,8 @@ export async function GET(request: Request) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Forward CRON_SECRET so /execute can authenticate the inbound call
-          // (in dev there's no secret, the route allows unauth'd calls there).
-          ...(env.CRON_SECRET
-            ? { Authorization: `Bearer ${env.CRON_SECRET}` }
-            : {}),
+          // Forward CRON_SECRET so /execute can authenticate the inbound call.
+          Authorization: `Bearer ${env.CRON_SECRET}`,
         },
         body: JSON.stringify({
           jobIds,

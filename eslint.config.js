@@ -34,19 +34,6 @@ export default tseslint.config(
         { checksVoidReturn: { attributes: false } },
       ],
       "no-console": ["error", { allow: ["warn", "error"] }],
-      "no-restricted-imports": [
-        "warn",
-        {
-          paths: [
-            {
-              name: "react",
-              importNames: ["useState", "useEffect"],
-              message:
-                "Prefer query/mutation states, react-hook-form, or server props over useState/useEffect. See CLAUDE.md.",
-            },
-          ],
-        },
-      ],
     },
   },
   {

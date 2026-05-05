@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- infrastructure: Virtuoso scroll management requires useState + useCallback + useRef + useEffect
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Virtuoso } from "react-virtuoso";
 import type { VirtuosoHandle } from "react-virtuoso";

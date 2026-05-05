@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- core utility: search state + intersection observer require useState/useEffect/useRef/useCallback
 import { useState, useEffect, useRef, useCallback } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { trpc } from "~/clients/trpc";

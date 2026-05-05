@@ -8,7 +8,7 @@ TrustClaw - a self-hostable personal AI agent with vector memory, Composio tools
 
 - **Framework:** [Next.js 15](https://nextjs.org/docs/15/) (App Router)
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/docs) + [shadcn/ui](https://ui.shadcn.com/docs/)
-- **Auth:** [Better Auth](https://www.better-auth.com/) with username/password login (Google OAuth has been removed).
+- **Auth:** [Better Auth](https://www.better-auth.com/) with username/password login.
 - **Server:** [tRPC](https://trpc.io/docs/) for all backend logic
 - **Date/Time:** [moment.js](https://momentjs.com/docs/) for all date formatting and parsing
 
@@ -143,7 +143,7 @@ src/
 
 ### State Management
 
-- NEVER use `useState`/`useEffect` unless ABSOLUTELY necessary
+- Prefer derived state and tRPC query data over `useState`/`useEffect` mirrors
 - **Query/mutation states:** use `{ isLoading, error, data }` from tRPC hooks
 - **Form states:** use `react-hook-form` with Zod + shadcn Form component
 - **Auth/session states:** prefer passing session information from server components, fall back to `authClient.useSession()` from `~/clients/auth/react`
@@ -517,8 +517,6 @@ const results = z.array(memoryRow).parse(
   `,
 );
 ```
-
-Reference: `../index/utils/notes/addNote.ts` and `../index/server/routers/tools/searchContacts/handler.ts` for full pgvector patterns.
 
 ### External SDK Clients
 

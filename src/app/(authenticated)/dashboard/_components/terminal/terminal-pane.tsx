@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- infrastructure: terminal scroll management requires hooks
 import { useState, useEffect, useRef, useMemo } from "react";
 import { PanelRightClose, Terminal } from "lucide-react";
 import type { UIMessage } from "@ai-sdk/react";

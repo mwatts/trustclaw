@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- controlled link state + polling effect
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
   Check,
@@ -21,16 +20,12 @@ import {
   trpcToastOnError,
 } from "~/components/core/toast-notifications";
 
-interface TelegramSettingsProps {
-  telegramChatId: string | null;
-}
-
-export function TelegramSettings({ telegramChatId }: TelegramSettingsProps) {
-  const [isLinked, setIsLinked] = useState(!!telegramChatId);
+export function TelegramSettings() {
   const [commandCopied, setCommandCopied] = useState(false);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const utils = trpc.useUtils();
 
+  // Cleanup the "copied" indicator timer on unmount.
   useEffect(() => {
     return () => {
       if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
@@ -44,30 +39,33 @@ export function TelegramSettings({ telegramChatId }: TelegramSettingsProps) {
   const telegramToken = linkTelegram.data?.token ?? null;
   const botUsername = linkTelegram.data?.botUsername ?? null;
 
+  // Single source of truth: the instance query. Poll while we're waiting for
+  // the user to send /start to BotFather; otherwise just read the steady-state
+  // value. Derive isLinked directly from the query so we don't have to mirror
+  // server state into local useState (the prior implementation did and needed
+  // a useEffect to keep the two in sync — classic anti-pattern).
+  const { data: instanceData } = trpc.trustclaw.getInstance.useQuery(undefined, {
+    refetchInterval: telegramToken ? 3000 : false,
+  });
+  const isLinked = !!instanceData?.instance?.telegramChatId;
+
+  // When the link finally completes, surface a toast and clear the pending
+  // token so the UI flips to the linked state.
+  useEffect(() => {
+    if (isLinked && telegramToken) {
+      showSuccessToast("Telegram linked successfully!");
+      linkTelegram.reset();
+    }
+  }, [isLinked, telegramToken, linkTelegram]);
+
   const unlinkTelegram = trpc.trustclaw.unlinkTelegram.useMutation({
     onSuccess: () => {
       showSuccessToast("Telegram unlinked");
-      setIsLinked(false);
       linkTelegram.reset();
       void utils.trustclaw.getInstance.invalidate();
     },
     onError: trpcToastOnError,
   });
-
-  // Poll for telegram link status when token is generated
-  const { data: pollingData } = trpc.trustclaw.getInstance.useQuery(undefined, {
-    enabled: !!telegramToken && !isLinked,
-    refetchInterval: telegramToken && !isLinked ? 3000 : false,
-  });
-
-  useEffect(() => {
-    if (pollingData?.instance?.telegramChatId && !isLinked) {
-      setIsLinked(true);
-      linkTelegram.reset();
-      showSuccessToast("Telegram linked successfully!");
-      void utils.trustclaw.getInstance.invalidate();
-    }
-  }, [pollingData?.instance?.telegramChatId, isLinked, linkTelegram, utils]);
 
   const handleCopyCommand = useCallback(async () => {
     if (!telegramToken) return;

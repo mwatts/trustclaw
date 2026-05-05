@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- infrastructure: elapsed time ticker requires hooks
 import { useState, useEffect, useRef } from "react";
 import { Loader2, CheckCircle2, XCircle, Wrench } from "lucide-react";
 import { cn } from "~/lib/utils";

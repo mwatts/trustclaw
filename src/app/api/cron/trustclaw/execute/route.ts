@@ -124,7 +124,7 @@ export async function POST(request: Request) {
   // Dev mode allows unauthenticated calls so the local trigger script works.
   if (env.NODE_ENV !== "development") {
     const auth = request.headers.get("authorization") ?? "";
-    if (!env.CRON_SECRET || auth !== `Bearer ${env.CRON_SECRET}`) {
+    if (auth !== `Bearer ${env.CRON_SECRET}`) {
       return new Response("Unauthorized", { status: 401 });
     }
   }

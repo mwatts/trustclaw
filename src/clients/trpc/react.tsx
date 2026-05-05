@@ -4,7 +4,6 @@ import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { httpBatchStreamLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
-// eslint-disable-next-line no-restricted-imports -- infrastructure: lazy tRPC client initialization
 import { useState } from "react";
 import SuperJSON from "superjson";
 

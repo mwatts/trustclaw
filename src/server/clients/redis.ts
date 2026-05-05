@@ -18,8 +18,11 @@ function createRedis(): Redis {
     throw new Error("Redis not configured");
   }
   const r = new Redis(env.REDIS_URL, { maxRetriesPerRequest: 3 });
-  // eslint-disable-next-line @typescript-eslint/no-empty-function -- suppress default ioredis unhandled error crash
-  r.on("error", () => {});
+  // ioredis crashes the process on unhandled error events. Surface them in
+  // logs instead so connection issues are still visible.
+  r.on("error", (err) => {
+    console.error("[redis] connection error:", err);
+  });
   return r;
 }
 

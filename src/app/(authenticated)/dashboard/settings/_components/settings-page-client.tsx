@@ -59,7 +59,7 @@ export function SettingsPageClient() {
 
       {data?.telegramConfigured && (
         <ErrorBoundary>
-          <TelegramSettings telegramChatId={instance.telegramChatId} />
+          <TelegramSettings />
         </ErrorBoundary>
       )}
 

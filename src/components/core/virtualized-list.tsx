@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- core utility: scroll event handling requires useEffect
 import { useRef, useEffect, type ReactNode } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 

@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- infrastructure: textarea auto-resize + keydown handling require hooks
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ArrowUp, Square } from "lucide-react";
 import type { ChatStatus } from "ai";

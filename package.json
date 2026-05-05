@@ -5,6 +5,22 @@
   "type": "module",
   "description": "A self-hostable personal AI agent with vector memory, Composio tools, and Telegram.",
   "license": "MIT",
+  "author": "Composio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ComposioHQ/trustclaw.git"
+  },
+  "homepage": "https://github.com/ComposioHQ/trustclaw#readme",
+  "bugs": "https://github.com/ComposioHQ/trustclaw/issues",
+  "keywords": [
+    "ai-agent",
+    "composio",
+    "nextjs",
+    "trpc",
+    "self-hosted",
+    "telegram-bot",
+    "vercel"
+  ],
   "scripts": {
     "build": "prisma generate && next build",
     "build:local": "NODE_ENV=production next build",

@@ -1,6 +1,5 @@
 "use client";
 
-// eslint-disable-next-line no-restricted-imports -- infrastructure: chat hook requires useState + useRef + useCallback + useMemo + useEffect
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import type { UIMessage } from "@ai-sdk/react";
