@@ -5,7 +5,7 @@
   "type": "module",
   "description": "A self-hostable personal AI agent with vector memory, Composio tools, and Telegram.",
   "license": "MIT",
-  "author": "Composio",
+  "author": "Composio <sarah@composio.dev>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ComposioHQ/trustclaw.git"
