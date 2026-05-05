@@ -76,14 +76,65 @@ async function getVercelToken(): Promise<string> {
   return token;
 }
 
-async function getGitHubToken(): Promise<{ token: string; username: string }> {
+async function ghIsInstalled(): Promise<boolean> {
+  try {
+    await exec("command -v gh");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function tryReadGhAuth(): Promise<{ token: string; username: string } | null> {
   try {
     const { stdout: token } = await exec("gh auth token");
     const { stdout: userJson } = await exec("gh api user --jq '.login'");
-    return { token: token.trim(), username: userJson.trim() };
+    const trimmedToken = token.trim();
+    const trimmedUser = userJson.trim();
+    if (!trimmedToken || !trimmedUser) return null;
+    return { token: trimmedToken, username: trimmedUser };
   } catch {
-    throw new Error("No GitHub auth found. Run: gh auth login");
+    return null;
   }
+}
+
+async function promptGhLogin(reason: string): Promise<void> {
+  log.warn(reason);
+  const proceed = await confirm({
+    message: "Run `gh auth login` now?",
+    initialValue: true,
+  });
+  if (isCancel(proceed) || !proceed) {
+    throw new Error("Cancelled. Run `gh auth login` and re-run cli:deploy.");
+  }
+  const code = await runInteractive("gh", ["auth", "login"]);
+  if (code !== 0) {
+    throw new Error(`gh auth login exited with code ${code}.`);
+  }
+}
+
+async function getGitHubToken(): Promise<{ token: string; username: string }> {
+  if (!(await ghIsInstalled())) {
+    const installCmd =
+      process.platform === "darwin"
+        ? "brew install gh"
+        : process.platform === "linux"
+          ? "see https://github.com/cli/cli/blob/trunk/docs/install_linux.md"
+          : "see https://cli.github.com/";
+    throw new Error(
+      `GitHub CLI (\`gh\`) is not installed. Install it (${installCmd}), then re-run cli:deploy.`,
+    );
+  }
+
+  let auth = await tryReadGhAuth();
+  if (!auth) {
+    await promptGhLogin("`gh` is installed but not authenticated.");
+    auth = await tryReadGhAuth();
+    if (!auth) {
+      throw new Error("Still no GitHub auth after login. Try again.");
+    }
+  }
+  return auth;
 }
 
 export async function detectAuth(): Promise<AuthResult> {
