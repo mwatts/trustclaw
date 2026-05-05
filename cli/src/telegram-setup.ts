@@ -30,9 +30,9 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
   ];
   const allTelegramKeysSet = TELEGRAM_KEYS.every((k) => args.existingEnvKeys.has(k));
   if (allTelegramKeysSet) {
-    // Skip the prompts but re-register the webhook against the (possibly new)
-    // stable deployment URL — the previous registration may point at a stale
-    // per-deployment URL.
+    // Skip the prompts. Only re-register the webhook if Telegram has it
+    // pointed at a URL other than our current stable deployment URL —
+    // otherwise the bot is already wired up correctly and we're done.
     const lookup = {
       token: args.vercelToken,
       teamId: args.vercelTeamId,
@@ -43,18 +43,31 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
       lookup,
       "TELEGRAM_WEBHOOK_SECRET",
     );
-    if (existingToken && existingSecret) {
-      const s = spinner();
-      s.start("Refreshing Telegram webhook with stable deployment URL");
-      const ok = await registerTelegramWebhook({
-        botToken: existingToken,
-        webhookSecret: existingSecret,
-        deploymentUrl: args.deploymentUrl,
-      });
-      s.stop(ok ? "Telegram webhook refreshed" : "Telegram webhook refresh failed");
-    } else {
+    if (!existingToken || !existingSecret) {
       log.info("Telegram already configured on this project — skipping setup.");
+      return true;
     }
+
+    const expectedUrl = `https://${args.deploymentUrl}/api/telegram-webhook`;
+    const s = spinner();
+    s.start("Checking Telegram webhook");
+    const currentUrl = await getCurrentWebhookUrl(existingToken);
+    if (currentUrl === expectedUrl) {
+      s.stop("Telegram webhook already up to date — skipping");
+      return true;
+    }
+
+    s.message(
+      currentUrl
+        ? `Webhook points at ${currentUrl} — updating`
+        : "No webhook registered — registering",
+    );
+    const ok = await registerTelegramWebhook({
+      botToken: existingToken,
+      webhookSecret: existingSecret,
+      deploymentUrl: args.deploymentUrl,
+    });
+    s.stop(ok ? "Telegram webhook updated" : "Telegram webhook update failed");
     return true;
   }
 
@@ -181,6 +194,17 @@ async function setVercelEnv(
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Failed to set ${key}: ${res.status} ${body}`);
+  }
+}
+
+async function getCurrentWebhookUrl(botToken: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/getWebhookInfo`);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { result?: { url?: string } };
+    return data.result?.url || null;
+  } catch {
+    return null;
   }
 }
 
