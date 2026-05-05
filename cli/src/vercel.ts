@@ -129,7 +129,7 @@ export async function createVercelProject(args: CreateProjectArgs): Promise<Verc
  *
  * Vercel turns this on by default for new projects, which means deployment URLs
  * like `<project>-<hash>-<team>.vercel.app` return an HTML 401 to anything
- * without a session cookie — including Telegram. The canonical
+ * without a session cookie - including Telegram. The canonical
  * `<project>.vercel.app` is unaffected, but any registration that picks up the
  * deployment URL silently breaks the bot. Easier to just turn the wall off.
  */
@@ -146,6 +146,6 @@ export async function disableDeploymentProtection(args: {
     headers: { Authorization: `Bearer ${args.token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ ssoProtection: null, passwordProtection: null }),
   }).catch(() => {
-    // best-effort — failing to disable shouldn't kill the deploy
+    // best-effort - failing to disable shouldn't kill the deploy
   });
 }

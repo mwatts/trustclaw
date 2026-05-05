@@ -7,9 +7,9 @@ interface SetEnvArgs {
   projectId: string;
   // null when the project already has COMPOSIO_API_KEY set and we're reusing it.
   composioApiKey: string | null;
-  // true when BETTER_AUTH_SECRET is already on the project — skip generating a new one.
+  // true when BETTER_AUTH_SECRET is already on the project - skip generating a new one.
   hasBetterAuthSecret: boolean;
-  // true when CRON_SECRET is already on the project — skip generating a new one.
+  // true when CRON_SECRET is already on the project - skip generating a new one.
   hasCronSecret: boolean;
 }
 

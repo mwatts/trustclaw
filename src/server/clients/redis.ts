@@ -87,7 +87,7 @@ export async function claimTelegramUpdate(
   updateId: number,
 ): Promise<boolean> {
   const r = getRedis();
-  if (!r) return true; // no dedup available — always claim
+  if (!r) return true; // no dedup available - always claim
   const result = await r.set(
     `telegram-update:${updateId}`,
     "1",

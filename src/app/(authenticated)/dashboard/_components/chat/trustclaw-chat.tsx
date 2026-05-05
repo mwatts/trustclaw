@@ -27,7 +27,7 @@ export function TrustClawChat() {
   const pages = historyQuery.data.pages;
   const allHistoryMessages = [...pages].reverse().flatMap((p) => p.messages);
 
-  // Direct mapping — DB content is already UIMessage parts format
+  // Direct mapping - DB content is already UIMessage parts format
   const initialMessages: UIMessage[] = allHistoryMessages.map((msg) => ({
     id: msg.id,
     role: msg.role,

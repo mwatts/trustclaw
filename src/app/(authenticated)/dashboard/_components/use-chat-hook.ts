@@ -37,7 +37,7 @@ export function useChatHook({ initialMessages, streamId }: {
   });
 
   // Seed initial messages once on mount. Never pass `messages` as a controlled
-  // prop to useChat — it resets internal state on every render, which causes a
+  // prop to useChat - it resets internal state on every render, which causes a
   // scroll loop when combined with Virtuoso's followOutput during streaming.
   useEffect(() => {
     if (seededRef.current) return;

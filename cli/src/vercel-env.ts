@@ -12,7 +12,7 @@ export interface ProjectEnvLookupArgs {
 
 /**
  * List the names of all env vars set on a Vercel project.
- * Cheap — no decryption required since we only need to know which keys exist.
+ * Cheap - no decryption required since we only need to know which keys exist.
  */
 export async function listProjectEnvKeys(
   args: ProjectEnvLookupArgs,
@@ -33,7 +33,7 @@ export async function listProjectEnvKeys(
  * Returns null if the key doesn't exist on the project.
  *
  * The list endpoint's `?decrypt=true` doesn't actually decrypt values for
- * marketplace-managed env vars — they come back as encrypted JSON blobs.
+ * marketplace-managed env vars - they come back as encrypted JSON blobs.
  * The per-id endpoint /v1/projects/{id}/env/{envId} returns the real value.
  */
 export async function fetchProjectEnvValue(

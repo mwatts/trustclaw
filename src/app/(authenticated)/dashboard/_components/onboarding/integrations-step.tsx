@@ -174,7 +174,7 @@ export function IntegrationsStep({
 
       <motion.div variants={itemVariants}>
         <p className="text-muted-foreground text-center text-xs">
-          I support 1000+ more tools — just ask me in the chat later
+          I support 1000+ more tools - just ask me in the chat later
         </p>
       </motion.div>
     </StepLayout>

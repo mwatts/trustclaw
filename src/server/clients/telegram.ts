@@ -29,7 +29,7 @@ export async function sendTelegramMessage(
 
   if (markdownResponse.ok) return;
 
-  // Markdown parsing failed (e.g. underscores in URLs) — retry as plain text
+  // Markdown parsing failed (e.g. underscores in URLs) - retry as plain text
   const plainResponse = await fetch(`${TELEGRAM_API_BASE}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -45,7 +45,7 @@ export async function sendTelegramMessage(
       `[telegram] sendMessage failed: ${plainResponse.status}`,
       { chatId, textLength: text.length, body },
     );
-    throw new Error(`Telegram sendMessage failed: ${plainResponse.status} — ${body}`);
+    throw new Error(`Telegram sendMessage failed: ${plainResponse.status} - ${body}`);
   }
 }
 
@@ -68,6 +68,6 @@ export async function sendChatAction(
       `[telegram] sendChatAction failed: ${response.status}`,
       { chatId, action, body },
     );
-    throw new Error(`Telegram sendChatAction failed: ${response.status} — ${body}`);
+    throw new Error(`Telegram sendChatAction failed: ${response.status} - ${body}`);
   }
 }

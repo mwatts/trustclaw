@@ -113,7 +113,7 @@ export function ToolkitCard({ toolkit }: ToolkitCardProps) {
         </div>
       </div>
 
-      {/* Frosted glass border effect — uses longhands to prevent mask shorthand from resetting maskComposite */}
+      {/* Frosted glass border effect - uses longhands to prevent mask shorthand from resetting maskComposite */}
       <div
         className="pointer-events-none absolute inset-0 z-[3] rounded-xl [clip-path:inset(0_round_12px)]"
         style={{

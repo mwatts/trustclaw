@@ -37,7 +37,7 @@ export function DangerZone() {
       <CardHeader>
         <CardTitle className="text-destructive">Danger Zone</CardTitle>
         <CardDescription>
-          Irreversible actions — proceed with caution
+          Irreversible actions - proceed with caution
         </CardDescription>
       </CardHeader>
       <CardContent>

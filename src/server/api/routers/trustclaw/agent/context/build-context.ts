@@ -280,7 +280,7 @@ export async function runPostResponseTasks(params: {
         compactionCount: instance.compactionCount,
       });
     } catch {
-      // Compaction failure is non-fatal — next turn will retry
+      // Compaction failure is non-fatal - next turn will retry
     }
   }
 }

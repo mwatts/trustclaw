@@ -122,7 +122,7 @@ async function provisionPostgres(args: ProvisionArgs): Promise<string> {
     ["postgres://", "postgresql://"],
   );
   if (existing) {
-    s.stop("Postgres already connected — reusing existing DATABASE_URL");
+    s.stop("Postgres already connected - reusing existing DATABASE_URL");
     return existing;
   }
   s.message("Provisioning Neon Postgres via Vercel Marketplace");
@@ -180,7 +180,7 @@ async function provisionRedis(args: ProvisionArgs): Promise<string> {
     ["redis://", "rediss://"],
   );
   if (existing) {
-    s.stop("Redis already connected — reusing existing REDIS_URL");
+    s.stop("Redis already connected - reusing existing REDIS_URL");
     return existing;
   }
   s.message("Provisioning Upstash Redis via Vercel Marketplace");

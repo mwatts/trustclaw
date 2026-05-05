@@ -162,7 +162,7 @@ export async function detectAuth(): Promise<AuthResult> {
   if (userRes.status === 401 || userRes.status === 403) {
     s.stop("Vercel token expired or invalid");
     await promptVercelLogin(
-      `Vercel returned ${userRes.status} — your saved token is likely expired or revoked.`,
+      `Vercel returned ${userRes.status} - your saved token is likely expired or revoked.`,
     );
     const refreshed = await readVercelTokenFromDisk();
     if (!refreshed) {

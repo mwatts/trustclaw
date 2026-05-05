@@ -41,7 +41,7 @@ Jobs use DB-level locking via atomic `UPDATE ... WHERE` to prevent duplicates:
 
 | Scenario | How it's handled |
 |---|---|
-| Two concurrent cron invocations | Atomic UPDATE — only one wins per row |
+| Two concurrent cron invocations | Atomic UPDATE - only one wins per row |
 | Job takes >60s, next tick fires | `nextRunAt=NULL` on claim prevents re-pick |
 | Function crashes mid-run | Stale lock reclaimed after 10 minutes |
 | Missed Vercel tick | Job runs once on next tick, schedule resumes |
@@ -52,11 +52,11 @@ Jobs use DB-level locking via atomic `UPDATE ... WHERE` to prevent duplicates:
 
 | File | Purpose |
 |---|---|
-| `route.ts` | Cron handler — claims jobs, dispatches to execute |
-| `execute/route.ts` | Per-job executor — runs agent via `after()`, releases lock |
+| `route.ts` | Cron handler - claims jobs, dispatches to execute |
+| `execute/route.ts` | Per-job executor - runs agent via `after()`, releases lock |
 | `execute/route.schema.ts` | Zod schema for execute endpoint body |
 | `~/server/api/routers/trustclaw/agent/tools/cron-utils.ts` | `computeNextRunAt()`, `validateCronExpression()` |
-| `~/server/api/routers/trustclaw/agent/run.ts` | `runAgent()` — the AI agent loop |
+| `~/server/api/routers/trustclaw/agent/run.ts` | `runAgent()` - the AI agent loop |
 | `~/server/api/routers/trustclaw/toggleCronJob.ts` | Clears lock when disabling a job |
 | `~/server/api/routers/trustclaw/getCronJobs.ts` | Exposes `lockedAt`, `lastError` to frontend |
 | `prisma/schema.prisma` (`CronJob` model) | `lockedAt`, `lockedBy`, `lastError` fields |
@@ -83,7 +83,7 @@ Requires `psql` for DB commands and the dev server running (`pnpm dev`).
 # Trigger the cron (with dev server running)
 ./scripts/test-cron.sh trigger
 
-# Trigger with a fake time (dev only — ignored in production)
+# Trigger with a fake time (dev only - ignored in production)
 ./scripts/test-cron.sh trigger --now "2025-06-15T09:00:00Z"
 
 # Check a job's full status (lock state, error, timestamps)
@@ -95,9 +95,9 @@ Requires `psql` for DB commands and the dev server running (`pnpm dev`).
 
 **Typical test flow:**
 
-1. `./scripts/test-cron.sh list` — find a job ID
-2. `./scripts/test-cron.sh make-due <id>` — make it due
-3. `./scripts/test-cron.sh trigger` — fire the cron
-4. `./scripts/test-cron.sh status <id>` — verify lock cleared, `lastRunAt` updated
+1. `./scripts/test-cron.sh list` - find a job ID
+2. `./scripts/test-cron.sh make-due <id>` - make it due
+3. `./scripts/test-cron.sh trigger` - fire the cron
+4. `./scripts/test-cron.sh status <id>` - verify lock cleared, `lastRunAt` updated
 
 **Date override (`--now`):** The cron route accepts a `?now=` query param in development mode. This overrides `new Date()` for the claim query and flows through to the execute endpoint for `lastRunAt`. Useful for testing time-specific schedules without waiting or manipulating the DB.

@@ -22,7 +22,7 @@ export function LoreStep({
   return (
     <StepLayout
       title="Any more lore for me?"
-      subtitle="Optional — give me some backstory or special instructions"
+      subtitle="Optional - give me some backstory or special instructions"
       onNext={onNext}
       onBack={onBack}
       onSkip={onSkip}

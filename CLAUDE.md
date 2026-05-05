@@ -2,7 +2,7 @@
 
 ## Product overview
 
-TrustClaw — a self-hostable personal AI agent with vector memory, Composio tools, and a Telegram bot.
+TrustClaw - a self-hostable personal AI agent with vector memory, Composio tools, and a Telegram bot.
 
 ## Tech Stack
 
@@ -118,7 +118,7 @@ src/
 
 ### Icons
 
-- ALWAYS import icons from `lucide-react` — this is the icon library used by shadcn
+- ALWAYS import icons from `lucide-react` - this is the icon library used by shadcn
 - NEVER use other icon libraries (e.g., `react-icons`, `heroicons`, `@phosphor-icons`)
 - Browse available icons at https://lucide.dev/icons
 
@@ -147,7 +147,7 @@ src/
 - **Query/mutation states:** use `{ isLoading, error, data }` from tRPC hooks
 - **Form states:** use `react-hook-form` with Zod + shadcn Form component
 - **Auth/session states:** prefer passing session information from server components, fall back to `authClient.useSession()` from `~/clients/auth/react`
-- **Complex real-time state:** use best judgement — Zustand is acceptable for features like streaming chat where you need a shared store with fine-grained updates across multiple components
+- **Complex real-time state:** use best judgement - Zustand is acceptable for features like streaming chat where you need a shared store with fine-grained updates across multiple components
 
 ### Session Data
 
@@ -191,7 +191,7 @@ export default async function Page() {
 - Never duplicate Zod schemas between frontend and backend
 - Never re-write types -- always infer the types directly!!
 
-**tRPC mutation forms** — import schema from the procedure's `.schema.ts` in `server/api/routers/`:
+**tRPC mutation forms** - import schema from the procedure's `.schema.ts` in `server/api/routers/`:
 
 ```typescript
 import {
@@ -211,7 +211,7 @@ import {
 **ALWAYS HANDLE ERRORS, LOADING AND SUCCESS STATES AS FOLLOWS:**
 
 - Errors: use `trpcToastOnError` (drop-in `onError` callback) or `showTrpcErrorToast(error)` (manual in catch blocks) from `~/components/core/toast-notifications`
-  - NEVER use generic `showErrorToast` for mutation errors — always use the typed `trpcToastOnError` / `showTrpcErrorToast`
+  - NEVER use generic `showErrorToast` for mutation errors - always use the typed `trpcToastOnError` / `showTrpcErrorToast`
 - Loading: optimistic updates (`utils.setData`) where appropriate, `<Spinner/>` from `components/ui` otherwise
 - Success: call `utils.invalidate()` for affected queries
 
@@ -247,15 +247,15 @@ try {
 
 **Refetch behavior:** Use TanStack Query's declarative options instead of `useEffect` + `invalidate()`:
 
-- Need fresh data on mount (e.g., after in-app navigation)? Use `refetchOnMount: "always"` — not a `useEffect` that calls `utils.*.invalidate()`
-- Need fresh data on window focus? Use `refetchOnWindowFocus: true` (default) or `"always"` for critical real-time data — never disable with `false` unless there's a strong reason
+- Need fresh data on mount (e.g., after in-app navigation)? Use `refetchOnMount: "always"` - not a `useEffect` that calls `utils.*.invalidate()`
+- Need fresh data on window focus? Use `refetchOnWindowFocus: true` (default) or `"always"` for critical real-time data - never disable with `false` unless there's a strong reason
 - When effects depend on query data and `refetchOnMount: "always"` is set, guard with `!isFetching` to avoid acting on stale cache before the refetch resolves
 
 ### Error Handling
 
 Two error components in `components/core/` serve different purposes:
 
-- **`<ErrorBoundary>`** — Catches unexpected runtime crashes in client components. Wrap any client component subtree that could throw during rendering (e.g., components parsing dynamic data, complex interactive widgets). Prevents a single crash from taking down the entire page. Accepts an optional `fallback` prop for custom crash UI.
+- **`<ErrorBoundary>`** - Catches unexpected runtime crashes in client components. Wrap any client component subtree that could throw during rendering (e.g., components parsing dynamic data, complex interactive widgets). Prevents a single crash from taking down the entire page. Accepts an optional `fallback` prop for custom crash UI.
 
   ```typescript
   import { ErrorBoundary } from "~/components/core/error-boundary";
@@ -271,7 +271,7 @@ Two error components in `components/core/` serve different purposes:
   </ErrorBoundary>
   ```
 
-- **`<ErrorDisplay>`** — For expected/handled error states (failed queries, API errors). Use when you have an `error` from a query/mutation hook and want to show a user-friendly message with a retry action.
+- **`<ErrorDisplay>`** - For expected/handled error states (failed queries, API errors). Use when you have an `error` from a query/mutation hook and want to show a user-friendly message with a retry action.
 
 **When to use which:**
 
@@ -332,7 +332,7 @@ export default async function DashboardPage() {
 
 - Protected pages go inside `app/(authenticated)/` - auto-redirects to `/login` if no session
 - Better Auth manages client session state internally (no `SessionHydrator` needed)
-- Session model is `{ user, session }` — there is no org or project concept
+- Session model is `{ user, session }` - there is no org or project concept
 
 **Server components:**
 
@@ -426,7 +426,7 @@ const createItem = trpc.items.create.useMutation({
 Used for real-time streaming (e.g., agent chat). The client uses `splitLink` to route subscriptions via `httpSubscriptionLink`:
 
 ```typescript
-// Client setup (in trpc client config) — route subscriptions separately
+// Client setup (in trpc client config) - route subscriptions separately
 import { splitLink, httpSubscriptionLink, httpBatchStreamLink } from "@trpc/client";
 
 splitLink({
@@ -437,7 +437,7 @@ splitLink({
 ```
 
 ```typescript
-// Server — define a subscription procedure with observable
+// Server - define a subscription procedure with observable
 import { observable } from "@trpc/server/observable";
 
 export const chat = protectedProcedure
@@ -458,7 +458,7 @@ export const chat = protectedProcedure
 ```
 
 ```typescript
-// Client — consume with useSubscription (controlled via enabled flag)
+// Client - consume with useSubscription (controlled via enabled flag)
 const [isActive, setIsActive] = useState(false);
 
 trpc.domain.procedure.useSubscription(input, {
@@ -476,7 +476,7 @@ The local tRPC backend uses Prisma with Neon PostgreSQL (including pgvector for 
 
 **Prisma in tRPC context:** Access via `ctx.prisma` in procedures.
 
-**Standard queries** — use Prisma's typed API:
+**Standard queries** - use Prisma's typed API:
 
 ```typescript
 const items = await ctx.prisma.item.findMany({
@@ -486,10 +486,10 @@ const items = await ctx.prisma.item.findMany({
 });
 ```
 
-**Raw SQL for pgvector** — use `$queryRaw` for vector operations since `Unsupported("VECTOR(1024)")` columns can't use the standard Prisma API. ALWAYS validate `$queryRaw` results with a Zod schema — never use TypeScript generics (`$queryRaw<Type>`) since those are compile-time-only assertions with no runtime safety:
+**Raw SQL for pgvector** - use `$queryRaw` for vector operations since `Unsupported("VECTOR(1024)")` columns can't use the standard Prisma API. ALWAYS validate `$queryRaw` results with a Zod schema - never use TypeScript generics (`$queryRaw<Type>`) since those are compile-time-only assertions with no runtime safety:
 
 ```typescript
-// In the .schema.ts file — define a Zod schema for the row shape
+// In the .schema.ts file - define a Zod schema for the row shape
 export const memoryRow = z.object({
   id: z.string(),
   content: z.string(),
@@ -499,14 +499,14 @@ export type MemoryRow = z.infer<typeof memoryRow>;
 ```
 
 ```typescript
-// Insert with embedding (void query — no validation needed)
+// Insert with embedding (void query - no validation needed)
 const embeddingString = `[${embedding.join(",")}]`;
 await prisma.$queryRaw`
   INSERT INTO composio_claw_memory (id, "instanceId", content, embedding, "createdAt")
   VALUES (${id}, ${instanceId}, ${content}, ${embeddingString}::vector, NOW())
 `;
 
-// Cosine similarity search — wrap result with z.array().parse()
+// Cosine similarity search - wrap result with z.array().parse()
 const results = z.array(memoryRow).parse(
   await prisma.$queryRaw`
     SELECT id, content, 1 - (embedding <=> ${queryEmbedding}::vector) AS similarity
@@ -526,7 +526,7 @@ Some features use external SDKs directly. These clients live in `src/server/clie
 
 ```
 src/server/clients/
-├── composio.ts   # Composio SDK (@composio/core) — uses global COMPOSIO_API_KEY from env
+├── composio.ts   # Composio SDK (@composio/core) - uses global COMPOSIO_API_KEY from env
 ├── telegram.ts   # Telegram Bot API helper
 ├── redis.ts      # Redis client (resumable streams, streaming state, abort flags)
 └── db.ts         # Prisma client
@@ -545,13 +545,13 @@ Every page and component MUST be mobile-friendly. Use Tailwind's responsive brea
 - **Common responsive patterns:**
 
   ```typescript
-  // WRONG — desktop-only fixed layout
+  // WRONG - desktop-only fixed layout
   <div className="flex gap-6">
     <aside className="w-64">...</aside>
     <main className="flex-1">...</main>
   </div>
 
-  // CORRECT — stacks on mobile, side-by-side on desktop
+  // CORRECT - stacks on mobile, side-by-side on desktop
   <div className="flex flex-col md:flex-row gap-4 md:gap-6">
     <aside className="w-full md:w-64">...</aside>
     <main className="flex-1">...</main>
@@ -582,14 +582,14 @@ Every page and component MUST be mobile-friendly. Use Tailwind's responsive brea
 We rarely need to make custom components since we are maximally using shadcn primatives. However, when we do, it is important to follow these guidelines.
 
 - NEVER use hardcoded Tailwind color classes (e.g., `text-gray-500`, `bg-blue-600`, `border-slate-200`)
-- ALWAYS use shadcn theme variables defined in `src/styles/globals.css` — these adapt to light/dark mode automatically
+- ALWAYS use shadcn theme variables defined in `src/styles/globals.css` - these adapt to light/dark mode automatically
 - Available theme colors: `background`, `foreground`, `card`, `popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`, `input`, `ring`, `chart-1`--`chart-5`, `sidebar-*`
 
   ```typescript
-  // WRONG — hardcoded colors
+  // WRONG - hardcoded colors
   <div className="bg-gray-100 text-gray-900 border-gray-200" />
 
-  // CORRECT — theme-aware colors
+  // CORRECT - theme-aware colors
   <div className="bg-muted text-foreground border-border" />
 
   // Common patterns:
@@ -601,31 +601,31 @@ We rarely need to make custom components since we are maximally using shadcn pri
 
 ### Environment Variables
 
-- ALWAYS use the `env` helper from `~/env` instead of raw `process.env` — it provides type safety and validation via Zod
+- ALWAYS use the `env` helper from `~/env` instead of raw `process.env` - it provides type safety and validation via Zod
 - Only use `process.env` directly in root config files that run before the app bootstraps (e.g., `next.config.js`) where the `env` helper is unavailable
-- Key server-only env vars: `BETTER_AUTH_SECRET`, `COMPOSIO_API_KEY`, `DATABASE_URL`, and optionally `AI_GATEWAY_API_KEY` (for local dev — on Vercel, `VERCEL_OIDC_TOKEN` is used automatically)
-- There are no `NEXT_PUBLIC_BACKEND_URL` or similar public backend env vars — all API calls go through tRPC
+- Key server-only env vars: `BETTER_AUTH_SECRET`, `COMPOSIO_API_KEY`, `DATABASE_URL`, and optionally `AI_GATEWAY_API_KEY` (for local dev - on Vercel, `VERCEL_OIDC_TOKEN` is used automatically)
+- There are no `NEXT_PUBLIC_BACKEND_URL` or similar public backend env vars - all API calls go through tRPC
 
   ```typescript
-  // WRONG — no validation, no type safety
+  // WRONG - no validation, no type safety
   const key = process.env.COMPOSIO_API_KEY;
 
-  // CORRECT — validated and typed
+  // CORRECT - validated and typed
   import { env } from "~/env";
   const key = env.COMPOSIO_API_KEY;
   ```
 
 ### Date & Time
 
-- ALWAYS use `moment` for date formatting and parsing — never use raw `Date` methods, `Intl.DateTimeFormat`, or `toLocaleString`
+- ALWAYS use `moment` for date formatting and parsing - never use raw `Date` methods, `Intl.DateTimeFormat`, or `toLocaleString`
 - Import as `import moment from "moment"`
 
   ```typescript
-  // WRONG — raw Date methods
+  // WRONG - raw Date methods
   date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
 
-  // CORRECT — moment.js
+  // CORRECT - moment.js
   moment(date).format("HH:mm:ss");
   moment(date).format("MMM D, YYYY h:mm A");
   moment(date).fromNow(); // "2 hours ago"

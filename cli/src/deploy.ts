@@ -102,7 +102,7 @@ export async function deploy(): Promise<void> {
       githubToken: auth.githubToken,
     });
 
-    // Project created/reused successfully — cache the name so future runs
+    // Project created/reused successfully - cache the name so future runs
     // skip the prompt.
     if (localRepo) {
       await saveConfig(localRepo.rootDir, { vercelProjectName: project.name });

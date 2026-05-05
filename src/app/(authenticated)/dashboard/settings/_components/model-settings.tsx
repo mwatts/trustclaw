@@ -80,7 +80,7 @@ export function ModelSettings({ currentModel }: ModelSettingsProps) {
                 <SelectItem key={m.value} value={m.value}>
                   <span>{m.label}</span>
                   <span className="ml-2 text-muted-foreground">
-                    — {m.description}
+                    - {m.description}
                   </span>
                 </SelectItem>
               ))}

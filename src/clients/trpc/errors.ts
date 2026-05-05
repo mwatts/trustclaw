@@ -7,7 +7,7 @@ const CODE_DESCRIPTIONS: Record<string, string> = {
   NOT_FOUND: "The requested resource was not found",
   CONFLICT: "This resource already exists",
   TOO_MANY_REQUESTS: "Please wait a moment and try again",
-  TIMEOUT: "The request timed out — please try again",
+  TIMEOUT: "The request timed out - please try again",
   INTERNAL_SERVER_ERROR: "Something went wrong on our end",
 };
 

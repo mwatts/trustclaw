@@ -31,7 +31,7 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
   const allTelegramKeysSet = TELEGRAM_KEYS.every((k) => args.existingEnvKeys.has(k));
   if (allTelegramKeysSet) {
     // Skip the prompts. Only re-register the webhook if Telegram has it
-    // pointed at a URL other than our current stable deployment URL —
+    // pointed at a URL other than our current stable deployment URL -
     // otherwise the bot is already wired up correctly and we're done.
     const lookup = {
       token: args.vercelToken,
@@ -44,7 +44,7 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
       "TELEGRAM_WEBHOOK_SECRET",
     );
     if (!existingToken || !existingSecret) {
-      log.info("Telegram already configured on this project — skipping setup.");
+      log.info("Telegram already configured on this project - skipping setup.");
       return true;
     }
 
@@ -53,14 +53,14 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
     s.start("Checking Telegram webhook");
     const currentUrl = await getCurrentWebhookUrl(existingToken);
     if (currentUrl === expectedUrl) {
-      s.stop("Telegram webhook already up to date — skipping");
+      s.stop("Telegram webhook already up to date - skipping");
       return true;
     }
 
     s.message(
       currentUrl
-        ? `Webhook points at ${currentUrl} — updating`
-        : "No webhook registered — registering",
+        ? `Webhook points at ${currentUrl} - updating`
+        : "No webhook registered - registering",
     );
     const ok = await registerTelegramWebhook({
       botToken: existingToken,
@@ -99,7 +99,7 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
     `In your @BotFather chat:\n` +
       `  1. Send /newbot\n` +
       `  2. Pick a display name (e.g. "My TrustClaw")\n` +
-      `  3. Pick a username — must end in "bot" (e.g. my_trustclaw_bot)\n` +
+      `  3. Pick a username - must end in "bot" (e.g. my_trustclaw_bot)\n` +
       `  4. @BotFather replies with a token like 1234567:ABC-DEF...\n` +
       `  5. Copy the token and paste it below`,
     "Get your bot token",
@@ -154,7 +154,7 @@ export async function maybeSetupTelegram(args: TelegramSetupArgs): Promise<boole
   }
   s2.stop("Telegram webhook registered");
 
-  // The running deployment doesn't have the new env vars baked in yet — kick a
+  // The running deployment doesn't have the new env vars baked in yet - kick a
   // fresh production deploy so the bot actually works as soon as the build lands.
   const redeployed = await triggerProductionDeploy({
     token: args.vercelToken,
@@ -230,7 +230,7 @@ async function registerTelegramWebhook(args: {
   const data = (await res.json()) as { ok: boolean; description?: string };
   if (!data.ok) return false;
 
-  // Verify Telegram actually stored the URL we asked for, and warn otherwise —
+  // Verify Telegram actually stored the URL we asked for, and warn otherwise -
   // catches silent drift if the registration appears to succeed but the stored
   // URL is wrong (e.g. URL canonicalization, prior registration sticking).
   const verifyRes = await fetch(

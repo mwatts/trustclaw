@@ -13,7 +13,7 @@ User message (web / telegram / cron)
     │
     ▼
 ┌─────────────────────────────────────────────────┐
-│  setup.ts — prepareAgentRun()                   │
+│  setup.ts - prepareAgentRun()                   │
 │                                                 │
 │  1. Load instance from DB                       │
 │  2. Build system prompt                         │
@@ -37,7 +37,7 @@ User message (web / telegram / cron)
 
 ```
 agent/
-├── setup.ts                    # prepareAgentRun() — builds agent, tools, context
+├── setup.ts                    # prepareAgentRun() - builds agent, tools, context
 ├── index.ts                    # Re-exports prepareAgentRun, types, cron-utils
 ├── types.ts                    # ReconstructedMessage, JsonValue, ToolResultOutput
 ├── strip-tool-echoes.ts        # Strips echoed tool results from assistant text
@@ -81,13 +81,13 @@ Protected zone: last 3 assistant turns are never pruned.
 
 Runs **before** compaction when context is approaching the compaction threshold (`contextWindow - reserveTokens - FLUSH_SOFT_TOKENS`) and the flush hasn't yet run for the current compaction cycle. Performs a single non-streaming LLM call with only `memory_save` / `memory_search` tools and the recent conversation, prompting the model to persist any durable facts (user preferences, key decisions, ongoing task state) to the pgvector memory store before the conversation is summarized away.
 
-Memories are stored in the `composio_claw_memory` table with 1024-dim vectors from OpenAI's `text-embedding-3-large` model. Flush failure is non-fatal — the next compaction cycle will retry.
+Memories are stored in the `composio_claw_memory` table with 1024-dim vectors from OpenAI's `text-embedding-3-large` model. Flush failure is non-fatal - the next compaction cycle will retry.
 
 ### Layer 3: Compaction (`compaction/run-compaction.ts`)
 
 Runs **after** the response when `contextTokens > contextWindow - reserveTokens` (default reserve: 20K tokens).
 
-**Cut point algorithm** (from pi-mono): Walk backwards from newest messages, accumulate token estimates (chars/4), stop at `keepRecentTokens` (20K). Snap forward to nearest valid cut point (user/assistant message — never split a tool-call/tool-result pair).
+**Cut point algorithm** (from pi-mono): Walk backwards from newest messages, accumulate token estimates (chars/4), stop at `keepRecentTokens` (20K). Snap forward to nearest valid cut point (user/assistant message - never split a tool-call/tool-result pair).
 
 **Summarization**: Calls `generateText()` with the compaction system prompt. Two modes:
 - **Initial** (no previous summary): Produces structured summary with Goal, Constraints, Progress (Done/In Progress/Blocked), Key Decisions, Next Steps, Critical Context
@@ -95,17 +95,17 @@ Runs **after** the response when `contextTokens > contextWindow - reserveTokens`
 
 **Staged summarization**: If messages to compact > 100K chars, splits into halves, summarizes each, then merges with a final LLM call.
 
-**Fallback chain**: Full summarization → retry without large tool results → minimal text description. Never throws — compaction failure just means the next turn retries.
+**Fallback chain**: Full summarization → retry without large tool results → minimal text description. Never throws - compaction failure just means the next turn retries.
 
 **Persistence**: Updates `instance.lastCompactionSummary` with an optimistic lock on `compactionCount` to prevent concurrent compactions. The summary is injected as the first user message (wrapped in `<summary>` tags) on subsequent turns.
 
 ## Message Flow Through DB
 
 Messages stored in `composio_claw_message` with `messageType`:
-- `regular` — normal user/assistant messages (loaded into context)
-- `hidden` — internal trigger messages not shown to user (excluded from context loading and history)
-- `memory_flush` — flush turn messages (excluded from context loading)
-- `compaction_summary` — reserved for future use
+- `regular` - normal user/assistant messages (loaded into context)
+- `hidden` - internal trigger messages not shown to user (excluded from context loading and history)
+- `memory_flush` - flush turn messages (excluded from context loading)
+- `compaction_summary` - reserved for future use
 
 After compaction, `loadContextMessages()` only loads messages where `createdAt >= lastCompactionAt`, plus prepends the compaction summary. This keeps DB queries fast regardless of total conversation length.
 
@@ -131,7 +131,7 @@ Created per-session via `createComposioClient(apiKey).create(orgId).tools()`. Th
 ## System Prompt
 
 Built by `system-prompt.ts`. Sections:
-1. Soul prompt (personality/values — default or user-customized)
+1. Soul prompt (personality/values - default or user-customized)
 2. Identity + user prompts (sourced from `OnboardingState`)
 3. Custom tools description
 4. Messaging guidelines
@@ -174,6 +174,6 @@ The compaction system is adapted from two open-source projects. All prompts and 
 
 | File | Imports |
 |------|---------|
-| `app/api/chat/route.ts` | `prepareAgentRun` — web streaming via `agent.stream()` |
-| `app/api/telegram-webhook/route.ts` | `prepareAgentRun` — telegram via `agent.generate()` |
-| `app/api/cron/trustclaw/execute/route.ts` | `prepareAgentRun`, `computeNextRunAt` — cron via `agent.generate()` |
+| `app/api/chat/route.ts` | `prepareAgentRun` - web streaming via `agent.stream()` |
+| `app/api/telegram-webhook/route.ts` | `prepareAgentRun` - telegram via `agent.generate()` |
+| `app/api/cron/trustclaw/execute/route.ts` | `prepareAgentRun`, `computeNextRunAt` - cron via `agent.generate()` |

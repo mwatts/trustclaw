@@ -4,7 +4,7 @@
 
 A 24/7 personal AI assistant with 1000+ tools via **OAuth** and **sandboxed execution**. Built on the ideas behind OpenClaw, rebuilt from scratch for security. Talks to you on the web or Telegram, remembers what matters, and handles recurring work on autopilot.
 
-> 🚀 **Self-host on Vercel** — one command, ~2 minutes. See below.
+> 🚀 **Self-host on Vercel** - one command, ~2 minutes. See below.
 
 ---
 
@@ -27,7 +27,7 @@ That's it. The CLI handles the entire flow:
 - ✅ Triggers the production deploy and opens the URL in your browser
 - ✅ Optionally walks you through Telegram bot setup (skip if you don't want it)
 - ✅ Tunes config (cron schedule, function timeouts) for your Vercel plan
-- ✅ Re-running picks up where it left off — no double-provisioning, no clobbering existing secrets
+- ✅ Re-running picks up where it left off - no double-provisioning, no clobbering existing secrets
 
 **Prerequisites:**
 
@@ -35,7 +35,7 @@ That's it. The CLI handles the entire flow:
 - A [GitHub account](https://github.com) (`gh auth login` once)
 - A free [Composio API key](https://dashboard.composio.dev/login?next=%2F~%2Fproject%2Fsettings%2Fapi-keys&flow=developer)
 
-LLM and embedding calls route through Vercel AI Gateway — **no Anthropic or OpenAI API keys required.**
+LLM and embedding calls route through Vercel AI Gateway - **no Anthropic or OpenAI API keys required.**
 
 ---
 
@@ -75,9 +75,9 @@ TrustClaw is a deliberate response to the security problems with running AI agen
 
 The design choices:
 
-- **No raw API keys handed to the agent** — Composio brokers OAuth for every tool
-- **No code runs on your machine** — every tool call executes in an isolated remote environment
-- **No long-lived shell access** — destructive prompt injection from a scraped email can't `rm -rf` your laptop because the agent doesn't have a shell on your laptop
+- **No raw API keys handed to the agent** - Composio brokers OAuth for every tool
+- **No code runs on your machine** - every tool call executes in an isolated remote environment
+- **No long-lived shell access** - destructive prompt injection from a scraped email can't `rm -rf` your laptop because the agent doesn't have a shell on your laptop
 
 ---
 
@@ -148,10 +148,10 @@ See [`.env.example`](./.env.example) for the full template.
 
 Bug reports, feature ideas, and PRs all welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup, project layout, coding conventions, and the PR checklist.
 
-For security issues, email [sarah@composio.dev](mailto:sarah@composio.dev) directly — please don't open a public issue.
+For security issues, email [sarah@composio.dev](mailto:sarah@composio.dev) directly - please don't open a public issue.
 
 ## 📝 License
 
-MIT — see [LICENSE](./LICENSE).
+MIT - see [LICENSE](./LICENSE).
 
 Built on top of [Composio](https://composio.dev). Inspired by [OpenClaw](https://github.com/openclaw/openclaw), rebuilt for security.

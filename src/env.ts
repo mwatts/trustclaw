@@ -13,7 +13,7 @@ export const env = createEnv({
     // Composio API (global key)
     COMPOSIO_API_KEY: z.string(),
 
-    // Telegram bot (optional — Telegram features disabled when missing)
+    // Telegram bot (optional - Telegram features disabled when missing)
     TELEGRAM_BOT_TOKEN: z.string().optional(),
     TELEGRAM_BOT_USERNAME: z.string().optional(),
     TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
@@ -21,13 +21,13 @@ export const env = createEnv({
     // Database
     DATABASE_URL: z.string().url(),
 
-    // Redis (optional — resumable streams disabled when missing; basic streaming still works)
+    // Redis (optional - resumable streams disabled when missing; basic streaming still works)
     REDIS_URL: z.string().optional(),
 
-    // Composio Twitter toolkit auth config (optional — twitter toolkit omitted when missing)
+    // Composio Twitter toolkit auth config (optional - twitter toolkit omitted when missing)
     TWITTER_AUTH_CONFIG: z.string().optional(),
 
-    // Cron auth — Vercel auto-injects this when crons are configured in vercel.json.
+    // Cron auth - Vercel auto-injects this when crons are configured in vercel.json.
     // Optional in dev so local cron triggers don't require it.
     CRON_SECRET: z.string().optional(),
   },

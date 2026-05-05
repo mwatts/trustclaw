@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   const streamId = crypto.randomUUID();
   await setStreamingMessage(instanceId, streamId);
 
-  // agent.stream() returns streamText() result — supports toUIMessageStreamResponse
+  // agent.stream() returns streamText() result - supports toUIMessageStreamResponse
   // Pass request.signal so the agent stops when the client disconnects (stop button)
   const result = await agent.stream({
     prompt: messages,

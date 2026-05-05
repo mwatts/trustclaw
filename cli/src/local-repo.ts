@@ -128,7 +128,7 @@ export async function confirmLocalPublish(
 
   if (info.hasUncommittedChanges) {
     log.warn(
-      "You have uncommitted changes — only committed code will be pushed. " +
+      "You have uncommitted changes - only committed code will be pushed. " +
         "Commit first if you want them included.",
     );
     const proceed = await confirm({
@@ -142,7 +142,7 @@ export async function confirmLocalPublish(
   }
 
   // If we already have a cached repo name from a prior run, skip both the
-  // "Publish?" confirm and the name prompt — the user clearly opted into the
+  // "Publish?" confirm and the name prompt - the user clearly opted into the
   // publish flow before. Edit `.trustclaw-deploy.json` to change the repo
   // name, or delete it to get the prompts back.
   if (defaultRepoName) {

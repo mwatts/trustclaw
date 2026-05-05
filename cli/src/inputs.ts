@@ -33,7 +33,7 @@ export async function askProjectName(defaultName?: string): Promise<string> {
 }
 
 // Composio keys are alphanumeric (with underscores/dashes) and start with `ak_`.
-// Reject anything else — we've seen UI text get pasted into the prompt by accident.
+// Reject anything else - we've seen UI text get pasted into the prompt by accident.
 const COMPOSIO_KEY_RE = /^ak_[A-Za-z0-9_-]{10,}$/;
 
 export function isValidComposioKey(value: string | null | undefined): boolean {
@@ -54,19 +54,19 @@ export async function gatherRemainingInputs(
     args.existingEnvKeys.has("COMPOSIO_API_KEY") &&
     args.existingComposioKeyValid
   ) {
-    log.info("COMPOSIO_API_KEY already set on the project — reusing.");
+    log.info("COMPOSIO_API_KEY already set on the project - reusing.");
   } else {
     if (args.existingEnvKeys.has("COMPOSIO_API_KEY")) {
       log.warn(
-        "Existing COMPOSIO_API_KEY on the project doesn't look like a valid Composio key — re-entering.",
+        "Existing COMPOSIO_API_KEY on the project doesn't look like a valid Composio key - re-entering.",
       );
     }
     note(
-      `Opening Composio — sign in (free), then copy your API key from the page.`,
+      `Opening Composio - sign in (free), then copy your API key from the page.`,
       "Composio",
     );
     await open(COMPOSIO_DASHBOARD_URL).catch(() => {
-      // Headless env — the URL was printed above for manual copy.
+      // Headless env - the URL was printed above for manual copy.
     });
     const raw = ensure(
       await password({
@@ -77,7 +77,7 @@ export async function gatherRemainingInputs(
           if (!trimmed.startsWith("ak_"))
             return "Composio keys start with 'ak_'";
           if (!COMPOSIO_KEY_RE.test(trimmed))
-            return "Key looks malformed — copy directly from dashboard.composio.dev";
+            return "Key looks malformed - copy directly from dashboard.composio.dev";
           return undefined;
         },
       }),
@@ -90,7 +90,7 @@ export async function gatherRemainingInputs(
     args.existingEnvKeys.has("REDIS_URL") ||
     args.existingEnvKeys.has("KV_URL")
   ) {
-    log.info("Redis already connected to the project — reusing.");
+    log.info("Redis already connected to the project - reusing.");
     enableRedis = true;
   } else {
     enableRedis = ensure(

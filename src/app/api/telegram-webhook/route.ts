@@ -100,8 +100,8 @@ export async function POST(request: Request) {
   }
 
   // Respond immediately to Telegram, process the message in the background.
-  // Agent runs can take 30-120+ seconds — exceeding Telegram's ~60s webhook
-  // timeout — which previously caused Telegram to retry and duplicate messages.
+  // Agent runs can take 30-120+ seconds - exceeding Telegram's ~60s webhook
+  // timeout - which previously caused Telegram to retry and duplicate messages.
   after(handleRegularMessage(chatId, text, update_id));
   return NextResponse.json({ ok: true });
 }

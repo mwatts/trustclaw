@@ -83,7 +83,7 @@ export function TelegramSettings({ telegramChatId }: TelegramSettingsProps) {
       <CardHeader>
         <CardTitle>Telegram</CardTitle>
         <CardDescription>
-          Chat with TrustClaw from Telegram — messages sync with the
+          Chat with TrustClaw from Telegram - messages sync with the
           dashboard
         </CardDescription>
       </CardHeader>
