@@ -113,7 +113,7 @@ async function handleStartCommand(chatId: string, text: string): Promise<void> {
   if (!token) {
     await sendTelegramMessage(
       chatId,
-      "Welcome! To link your TrustClaw by Composio agent, use the link from https://trustclaw.app/dashboard/settings.",
+      `Welcome! To link your TrustClaw agent, use the link from ${env.NEXT_PUBLIC_APP_URL}/dashboard/settings.`,
     );
     return;
   }
@@ -134,7 +134,7 @@ async function handleStartCommand(chatId: string, text: string): Promise<void> {
   if (count === 0) {
     await sendTelegramMessage(
       chatId,
-      "Invalid or expired link token. Please generate a new one from https://trustclaw.app/dashboard/settings.",
+      `Invalid or expired link token. Please generate a new one from ${env.NEXT_PUBLIC_APP_URL}/dashboard/settings.`,
     );
     return;
   }
@@ -158,7 +158,7 @@ async function handleRegularMessage(
   if (!instance) {
     await sendTelegramMessage(
       chatId,
-      "I don't recognize this chat. Link me from https://www.trustclaw.app/dashboard/settings",
+      `I don't recognize this chat. Link me from ${env.NEXT_PUBLIC_APP_URL}/dashboard/settings`,
     );
     return;
   }

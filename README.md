@@ -4,8 +4,7 @@
 
 A 24/7 personal AI assistant with 1000+ tools via **OAuth** and **sandboxed execution**. Built on the ideas behind OpenClaw, rebuilt from scratch for security. Talks to you on the web or Telegram, remembers what matters, and handles recurring work on autopilot.
 
-> 🚀 **Try the hosted version:** [www.trustclaw.app](https://www.trustclaw.app)
-> 🛠 **Self-host on Vercel:** one command, ~2 minutes — see below.
+> 🚀 **Self-host on Vercel** — one command, ~2 minutes. See below.
 
 ---
 
