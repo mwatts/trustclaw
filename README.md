@@ -13,7 +13,7 @@ A 24/7 personal AI assistant with 1000+ tools via **OAuth** and **sandboxed exec
 ```bash
 git clone https://github.com/ComposioHQ/trustclaw && cd trustclaw
 pnpm install
-pnpm dlx @composiohq/trustclaw deploy
+pnpm dlx @composio/trustclaw deploy
 ```
 
 That's it. The CLI handles the entire flow:
